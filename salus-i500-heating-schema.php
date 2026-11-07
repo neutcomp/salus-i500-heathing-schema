@@ -245,10 +245,6 @@ final class Salus_iT500_Heating_Schema {
 									<?php endforeach; ?>
 								</div>
 							<?php endif; ?>
-							<details class="salus-schema-raw">
-								<summary><?php esc_html_e( 'View original device value', 'salus-i500-heating-schema' ); ?></summary>
-								<code><?php echo esc_html( $day['value'] ); ?></code>
-							</details>
 						</article>
 					<?php endforeach; ?>
 				</div>
