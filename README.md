@@ -6,7 +6,7 @@ This WordPress plugin adds a standalone **Heating schema → Schema** admin scre
 
 1. Enter your Salus account username and password, then save them.
 2. Select **Test connection** under **Settings → Salus iT500** to verify authentication.
-3. Open **Heating schema → Schema** and select **Refresh schema** to load device programmes.
+3. Open **Heating schema → Schema**. If no schema is cached, the page loads the device programmes automatically and shows a loading indicator. Cached data is shown immediately; select **Refresh schema** to fetch the latest data at any time.
 4. The weekly view decodes each heating zone's Monday-to-Sunday programme into readable time and target-temperature changes.
 5. Expand **Edit this heating zone** to change its schedule. Leave both fields empty to remove a point, then select **Save zone schedule**. Each zone is submitted separately.
 

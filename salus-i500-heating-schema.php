@@ -20,6 +20,7 @@ final class Salus_iT500_Heating_Schema {
 	const SETTINGS_PAGE_SLUG = 'salus-i500-settings';
 	const TEST_ACTION        = 'salus_i500_test_connection';
 	const SCHEMA_ACTION      = 'salus_i500_refresh_schema';
+	const AUTO_LOAD_ACTION   = 'salus_i500_load_schema';
 	const UPDATE_ACTION      = 'salus_i500_update_zone_schedule';
 	const API_HOST           = 'https://sal-emea-p01-api.arrayent.com';
 
@@ -30,6 +31,7 @@ final class Salus_iT500_Heating_Schema {
 		add_action( 'admin_enqueue_scripts', array( __CLASS__, 'enqueue_schema_styles' ) );
 		add_action( 'admin_post_' . self::TEST_ACTION, array( __CLASS__, 'test_connection' ) );
 		add_action( 'admin_post_' . self::SCHEMA_ACTION, array( __CLASS__, 'refresh_schema' ) );
+		add_action( 'wp_ajax_' . self::AUTO_LOAD_ACTION, array( __CLASS__, 'auto_load_schema' ) );
 		add_action( 'admin_post_' . self::UPDATE_ACTION, array( __CLASS__, 'update_zone_schedule' ) );
 	}
 
@@ -81,7 +83,55 @@ final class Salus_iT500_Heating_Schema {
 		wp_enqueue_style( 'salus-i500-schema' );
 		wp_add_inline_style(
 			'salus-i500-schema',
-			'.salus-schema-intro{max-width:760px;color:#50575e}.salus-schema-device{margin:28px 0 36px}.salus-schema-zone{margin:20px 0 28px}.salus-schema-days{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:12px;max-width:1100px}.salus-schema-day{background:#fff;border:1px solid #dcdcde;border-radius:6px;padding:14px 16px;box-shadow:0 1px 2px rgba(0,0,0,.04)}.salus-schema-day h4{margin:0 0 12px;font-size:14px}.salus-schema-slots{display:flex;flex-wrap:wrap;gap:8px}.salus-schema-slot{display:inline-flex;align-items:center;gap:8px;padding:7px 10px;background:#f0f6fc;border:1px solid #c5d9ed;border-radius:4px;color:#1d2327}.salus-schema-slot time{font-weight:600}.salus-schema-slot strong{color:#135e96}.salus-schema-empty{color:#646970;font-style:italic}.salus-schema-raw{margin-top:12px;color:#646970}.salus-schema-raw code{white-space:normal;overflow-wrap:anywhere}.salus-schema-warning{color:#b32d2e}.salus-schema-editor{margin-top:16px;padding:12px 16px;border:1px solid #c3c4c7;background:#fff;max-width:1100px}.salus-schema-editor summary{cursor:pointer;font-weight:600}.salus-schema-editor .salus-schema-days{margin-top:12px}.salus-schema-edit-row{display:flex;align-items:center;gap:8px;margin:6px 0}.salus-schema-edit-row label{display:flex;align-items:center;gap:4px}.salus-schema-edit-row input[type=time]{width:115px}.salus-schema-edit-row input[type=number]{width:90px}@media(max-width:600px){.salus-schema-days{grid-template-columns:1fr}.salus-schema-edit-row{flex-wrap:wrap}}'
+			'.salus-schema-intro{max-width:760px;color:#50575e}.salus-schema-loading{display:flex;align-items:center;gap:6px;margin-top:16px}.salus-schema-device{margin:28px 0 36px}.salus-schema-zone{margin:20px 0 28px}.salus-schema-days{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:12px;max-width:1100px}.salus-schema-day{background:#fff;border:1px solid #dcdcde;border-radius:6px;padding:14px 16px;box-shadow:0 1px 2px rgba(0,0,0,.04)}.salus-schema-day h4{margin:0 0 12px;font-size:14px}.salus-schema-slots{display:flex;flex-wrap:wrap;gap:8px}.salus-schema-slot{display:inline-flex;align-items:center;gap:8px;padding:7px 10px;background:#f0f6fc;border:1px solid #c5d9ed;border-radius:4px;color:#1d2327}.salus-schema-slot time{font-weight:600}.salus-schema-slot strong{color:#135e96}.salus-schema-empty{color:#646970;font-style:italic}.salus-schema-raw{margin-top:12px;color:#646970}.salus-schema-raw code{white-space:normal;overflow-wrap:anywhere}.salus-schema-warning{color:#b32d2e}.salus-schema-editor{margin-top:16px;padding:12px 16px;border:1px solid #c3c4c7;background:#fff;max-width:1100px}.salus-schema-editor summary{cursor:pointer;font-weight:600}.salus-schema-editor .salus-schema-days{margin-top:12px}.salus-schema-edit-row{display:flex;align-items:center;gap:8px;margin:6px 0}.salus-schema-edit-row label{display:flex;align-items:center;gap:4px}.salus-schema-edit-row input[type=time]{width:115px}.salus-schema-edit-row input[type=number]{width:90px}@media(max-width:600px){.salus-schema-days{grid-template-columns:1fr}.salus-schema-edit-row{flex-wrap:wrap}}'
+		);
+
+		wp_register_script( 'salus-i500-schema', false, array(), '0.1.0', true );
+		wp_enqueue_script( 'salus-i500-schema' );
+		wp_localize_script(
+			'salus-i500-schema',
+			'salusI500Schema',
+			array(
+				'ajaxUrl'   => admin_url( 'admin-ajax.php' ),
+				'action'    => self::AUTO_LOAD_ACTION,
+				'nonce'     => wp_create_nonce( self::AUTO_LOAD_ACTION ),
+				'loadError' => __( 'Could not load the heating schema. Use “Refresh schema” to try again.', 'salus-i500-heating-schema' ),
+			)
+		);
+		wp_add_inline_script(
+			'salus-i500-schema',
+			'(function() {
+				document.addEventListener("DOMContentLoaded", function() {
+					var panel = document.querySelector("[data-salus-auto-load]");
+					if (!panel) {
+						return;
+					}
+
+					var loading = panel.querySelector(".salus-schema-loading");
+					var error = panel.querySelector(".salus-schema-warning");
+					var body = new URLSearchParams({ action: salusI500Schema.action, nonce: salusI500Schema.nonce });
+
+					fetch(salusI500Schema.ajaxUrl, {
+						method: "POST",
+						credentials: "same-origin",
+						headers: { "Content-Type": "application/x-www-form-urlencoded; charset=UTF-8" },
+						body: body.toString()
+					}).then(function(response) {
+						return response.json().then(function(payload) {
+							if (!response.ok || !payload.success) {
+								throw new Error(payload.data && payload.data.message ? payload.data.message : salusI500Schema.loadError);
+							}
+							return payload;
+						});
+					}).then(function() {
+						window.location.reload();
+					}).catch(function(exception) {
+						loading.hidden = true;
+						error.textContent = exception.message || salusI500Schema.loadError;
+						error.hidden = false;
+					});
+				});
+			})();'
 		);
 	}
 
@@ -222,7 +272,18 @@ final class Salus_iT500_Heating_Schema {
 			} elseif ( is_array( $schema ) && isset( $schema['devices'] ) ) {
 				echo '<p>' . esc_html__( 'No devices were returned for this account.', 'salus-i500-heating-schema' ) . '</p>';
 			} else {
-				echo '<p>' . esc_html__( 'No schema has been loaded yet. Select “Refresh schema” to read it from Salus.', 'salus-i500-heating-schema' ) . '</p>';
+				?>
+				<div data-salus-auto-load>
+					<p class="salus-schema-loading" role="status" aria-live="polite">
+						<span class="spinner is-active" aria-hidden="true"></span>
+						<?php esc_html_e( 'Loading heating schema from Salus…', 'salus-i500-heating-schema' ); ?>
+					</p>
+					<p class="salus-schema-warning" role="alert" hidden></p>
+					<noscript>
+						<p><?php esc_html_e( 'Automatic loading requires JavaScript. Select “Refresh schema” to read it from Salus.', 'salus-i500-heating-schema' ); ?></p>
+					</noscript>
+				</div>
+				<?php
 			}
 			?>
 		</div>
@@ -326,19 +387,52 @@ final class Salus_iT500_Heating_Schema {
 		}
 		check_admin_referer( self::SCHEMA_ACTION );
 
+		$schema = self::retrieve_schema();
+		if ( is_wp_error( $schema ) ) {
+			self::store_connection_result( 'error', $schema->get_error_message() );
+		} else {
+			self::store_connection_result( 'success', __( 'Heating schema refreshed from Salus.', 'salus-i500-heating-schema' ) );
+		}
+		self::redirect_to_schema();
+	}
+
+	public static function auto_load_schema() {
+		if ( ! current_user_can( 'manage_options' ) ) {
+			wp_send_json_error(
+				array( 'message' => __( 'You are not allowed to load the heating schema.', 'salus-i500-heating-schema' ) ),
+				403
+			);
+		}
+		if ( false === check_ajax_referer( self::AUTO_LOAD_ACTION, 'nonce', false ) ) {
+			wp_send_json_error(
+				array( 'message' => __( 'The automatic schema request could not be verified. Reload the page and try again.', 'salus-i500-heating-schema' ) ),
+				403
+			);
+		}
+
+		$schema = get_transient( self::schema_cache_key() );
+		if ( ! is_array( $schema ) || ! isset( $schema['devices'] ) || ! is_array( $schema['devices'] ) ) {
+			$schema = self::retrieve_schema();
+		}
+		if ( is_wp_error( $schema ) ) {
+			wp_send_json_error( array( 'message' => $schema->get_error_message() ), 500 );
+		}
+
+		wp_send_json_success();
+	}
+
+	private static function retrieve_schema() {
 		$credentials = self::get_credentials();
 		if ( '' === $credentials['username'] || '' === $credentials['password'] ) {
-			self::store_connection_result(
-				'error',
+			return new WP_Error(
+				'salus_credentials_missing',
 				__( 'Enter and save your Salus username and password in Settings > Salus iT500 first.', 'salus-i500-heating-schema' )
 			);
-			self::redirect_to_schema();
 		}
 
 		$auth = self::authenticate( $credentials );
 		if ( is_wp_error( $auth ) ) {
-			self::store_connection_result( 'error', $auth->get_error_message() );
-			self::redirect_to_schema();
+			return $auth;
 		}
 
 		$device_list = self::api_post(
@@ -349,20 +443,17 @@ final class Salus_iT500_Heating_Schema {
 			)
 		);
 		if ( is_wp_error( $device_list ) ) {
-			self::store_connection_result( 'error', $device_list->get_error_message() );
-			self::redirect_to_schema();
+			return $device_list;
 		}
 
 		$devices_xml = self::parse_api_xml( $device_list, 'getDeviceListResponse' );
 		if ( is_wp_error( $devices_xml ) ) {
-			self::store_connection_result( 'error', $devices_xml->get_error_message() );
-			self::redirect_to_schema();
+			return $devices_xml;
 		}
 
 		$device_nodes = $devices_xml->xpath( '//*[local-name()="devList"]' );
 		if ( false === $device_nodes ) {
-			self::store_connection_result( 'error', __( 'Could not read the Salus device list.', 'salus-i500-heating-schema' ) );
-			self::redirect_to_schema();
+			return new WP_Error( 'salus_device_list_invalid', __( 'Could not read the Salus device list.', 'salus-i500-heating-schema' ) );
 		}
 
 		$devices = array();
@@ -381,20 +472,17 @@ final class Salus_iT500_Heating_Schema {
 				)
 			);
 			if ( is_wp_error( $attributes_response ) ) {
-				self::store_connection_result( 'error', $attributes_response->get_error_message() );
-				self::redirect_to_schema();
+				return $attributes_response;
 			}
 
 			$attributes_xml = self::parse_api_xml( $attributes_response, 'getDeviceAttributesWithValuesResponse' );
 			if ( is_wp_error( $attributes_xml ) ) {
-				self::store_connection_result( 'error', $attributes_xml->get_error_message() );
-				self::redirect_to_schema();
+				return $attributes_xml;
 			}
 
 			$attributes = self::extract_device_attributes( $attributes_xml );
 			if ( is_wp_error( $attributes ) ) {
-				self::store_connection_result( 'error', $attributes->get_error_message() );
-				self::redirect_to_schema();
+				return $attributes;
 			}
 
 			$zones = array();
@@ -442,8 +530,7 @@ final class Salus_iT500_Heating_Schema {
 			array( 'devices' => $devices ),
 			5 * MINUTE_IN_SECONDS
 		);
-		self::store_connection_result( 'success', __( 'Heating schema refreshed from Salus.', 'salus-i500-heating-schema' ) );
-		self::redirect_to_schema();
+		return array( 'devices' => $devices );
 	}
 
 	public static function update_zone_schedule() {

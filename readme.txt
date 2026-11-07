@@ -13,7 +13,7 @@ View and edit Salus iT500 weekly heating programmes, configure account credentia
 
 Salus iT500 Heating Schema adds a Heating schema > Schema admin screen and settings under Settings > Salus iT500. Enter your Salus account username and password, save them, and refresh the weekly programme values from your iT500.
 
-The schema screen decodes programme values for each available heating zone from Monday to Sunday into readable time and target-temperature changes. Edit and submit the weekly programme one heating zone at a time. Temperatures are shown in the device's configured unit.
+The schema screen automatically retrieves programme values when no data is cached, and shows a loading indicator while retrieving them. Cached schema data is shown immediately. Select Refresh schema to fetch the latest data manually. The screen decodes programme values for each available heating zone from Monday to Sunday into readable time and target-temperature changes. Edit and submit the weekly programme one heating zone at a time. Temperatures are shown in the device's configured unit.
 
 The connection uses the unofficial iT500 authentication flow implemented by pyit500. The API requires an MD5 password digest in the login request. This is compatibility behavior for that protocol, not a recommended password-storage method. TLS certificate verification remains enabled.
 
@@ -28,7 +28,7 @@ The schema is a standalone admin page. Saving a zone sends schedule changes to t
 3. Go to **Settings > Salus iT500**.
 4. Enter your account username and password, then select **Save credentials**.
 5. Select **Test connection** under Settings > Salus iT500 to check authentication.
-6. Open Heating schema > Schema and select **Refresh schema** to load weekly programme values.
+6. Open Heating schema > Schema. Data loads automatically when there is no cached schema; use **Refresh schema** to retrieve it manually.
 7. Expand **Edit this heating zone** to change times or temperatures, then select **Save zone schedule**. Each zone is submitted separately.
 
 == Frequently Asked Questions ==
