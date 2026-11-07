@@ -15,6 +15,8 @@ Salus iT500 Heating Schema adds a Heating schema > Schema admin screen and setti
 
 The schema screen automatically retrieves programme values when no data is cached, and shows a loading indicator while retrieving them. Cached schema data is shown immediately. Select Refresh schema to fetch the latest data manually. The screen decodes programme values for each available heating zone from Monday to Sunday into readable time and target-temperature changes. Edit and submit the weekly programme one heating zone at a time. Temperatures are shown in the device's configured unit.
 
+When another administrator has the schema page open, a notice recommends coordinating before saving. Presence updates run every 30 seconds and expire after 75 seconds without a response; this is a heads-up, not an edit lock.
+
 The connection uses the unofficial iT500 authentication flow implemented by pyit500. The API requires an MD5 password digest in the login request. This is compatibility behavior for that protocol, not a recommended password-storage method. TLS certificate verification remains enabled.
 
 The plugin stores credentials in the WordPress options database. Restrict administrator access and protect database backups accordingly. Only connect to accounts and devices you are authorized to use.

@@ -21,6 +21,7 @@ final class Salus_iT500_Heating_Schema {
 	const TEST_ACTION        = 'salus_i500_test_connection';
 	const SCHEMA_ACTION      = 'salus_i500_refresh_schema';
 	const AUTO_LOAD_ACTION   = 'salus_i500_load_schema';
+	const PRESENCE_ACTION    = 'salus_i500_schema_presence';
 	const UPDATE_ACTION      = 'salus_i500_update_zone_schedule';
 	const API_HOST           = 'https://sal-emea-p01-api.arrayent.com';
 
@@ -32,6 +33,7 @@ final class Salus_iT500_Heating_Schema {
 		add_action( 'admin_post_' . self::TEST_ACTION, array( __CLASS__, 'test_connection' ) );
 		add_action( 'admin_post_' . self::SCHEMA_ACTION, array( __CLASS__, 'refresh_schema' ) );
 		add_action( 'wp_ajax_' . self::AUTO_LOAD_ACTION, array( __CLASS__, 'auto_load_schema' ) );
+		add_action( 'wp_ajax_' . self::PRESENCE_ACTION, array( __CLASS__, 'update_schema_presence' ) );
 		add_action( 'admin_post_' . self::UPDATE_ACTION, array( __CLASS__, 'update_zone_schedule' ) );
 	}
 
@@ -83,7 +85,7 @@ final class Salus_iT500_Heating_Schema {
 		wp_enqueue_style( 'salus-i500-schema' );
 		wp_add_inline_style(
 			'salus-i500-schema',
-			'.salus-schema-intro{max-width:760px;color:#50575e}.salus-schema-loading{display:flex;align-items:center;gap:6px;margin-top:16px}.salus-schema-progress-overlay{position:fixed;inset:0;z-index:100000;display:flex;align-items:center;justify-content:center;background:rgba(255,255,255,.82)}.salus-schema-progress-message{display:flex;align-items:center;gap:8px;padding:16px 20px;background:#fff;border:1px solid #c3c4c7;border-radius:4px;box-shadow:0 2px 8px rgba(0,0,0,.15);font-size:14px}.salus-schema-device{margin:28px 0 36px}.salus-schema-zone{margin:20px 0 28px}.salus-schema-days{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:12px;max-width:1100px}.salus-schema-day{background:#fff;border:1px solid #dcdcde;border-radius:6px;padding:14px 16px;box-shadow:0 1px 2px rgba(0,0,0,.04)}.salus-schema-day h4{margin:0 0 12px;font-size:14px}.salus-schema-slots{display:flex;flex-wrap:wrap;gap:8px}.salus-schema-slot{display:inline-flex;align-items:center;gap:8px;padding:7px 10px;background:#f0f6fc;border:1px solid #c5d9ed;border-radius:4px;color:#1d2327}.salus-schema-slot time{font-weight:600}.salus-schema-slot strong{color:#135e96}.salus-schema-empty{color:#646970;font-style:italic}.salus-schema-raw{margin-top:12px;color:#646970}.salus-schema-raw code{white-space:normal;overflow-wrap:anywhere}.salus-schema-warning{color:#b32d2e}.salus-schema-editor{margin-top:16px;padding:12px 16px;border:1px solid #c3c4c7;background:#fff;max-width:1100px}.salus-schema-editor summary{cursor:pointer;font-weight:600}.salus-schema-editor .salus-schema-days{margin-top:12px}.salus-schema-edit-row{display:flex;align-items:center;gap:8px;margin:6px 0}.salus-schema-edit-row label{display:flex;align-items:center;gap:4px}.salus-schema-edit-row input[type=time]{width:115px}.salus-schema-edit-row input[type=number]{width:90px}@media(max-width:600px){.salus-schema-days{grid-template-columns:1fr}.salus-schema-edit-row{flex-wrap:wrap}}'
+			'.salus-schema-intro{max-width:760px;color:#50575e}.salus-schema-presence{max-width:760px}.salus-schema-loading{display:flex;align-items:center;gap:6px;margin-top:16px}.salus-schema-progress-overlay{position:fixed;inset:0;z-index:100000;display:flex;align-items:center;justify-content:center;background:rgba(255,255,255,.82)}.salus-schema-progress-message{display:flex;align-items:center;gap:8px;padding:16px 20px;background:#fff;border:1px solid #c3c4c7;border-radius:4px;box-shadow:0 2px 8px rgba(0,0,0,.15);font-size:14px}.salus-schema-device{margin:28px 0 36px}.salus-schema-zone{margin:20px 0 28px}.salus-schema-days{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:12px;max-width:1100px}.salus-schema-day{background:#fff;border:1px solid #dcdcde;border-radius:6px;padding:14px 16px;box-shadow:0 1px 2px rgba(0,0,0,.04)}.salus-schema-day h4{margin:0 0 12px;font-size:14px}.salus-schema-slots{display:flex;flex-wrap:wrap;gap:8px}.salus-schema-slot{display:inline-flex;align-items:center;gap:8px;padding:7px 10px;background:#f0f6fc;border:1px solid #c5d9ed;border-radius:4px;color:#1d2327}.salus-schema-slot time{font-weight:600}.salus-schema-slot strong{color:#135e96}.salus-schema-empty{color:#646970;font-style:italic}.salus-schema-raw{margin-top:12px;color:#646970}.salus-schema-raw code{white-space:normal;overflow-wrap:anywhere}.salus-schema-warning{color:#b32d2e}.salus-schema-editor{margin-top:16px;padding:12px 16px;border:1px solid #c3c4c7;background:#fff;max-width:1100px}.salus-schema-editor summary{cursor:pointer;font-weight:600}.salus-schema-editor .salus-schema-days{margin-top:12px}.salus-schema-edit-row{display:flex;align-items:center;gap:8px;margin:6px 0}.salus-schema-edit-row label{display:flex;align-items:center;gap:4px}.salus-schema-edit-row input[type=time]{width:115px}.salus-schema-edit-row input[type=number]{width:90px}@media(max-width:600px){.salus-schema-days{grid-template-columns:1fr}.salus-schema-edit-row{flex-wrap:wrap}}'
 		);
 
 		wp_register_script( 'salus-i500-schema', false, array(), '0.1.0', true );
@@ -97,6 +99,10 @@ final class Salus_iT500_Heating_Schema {
 				'nonce'     => wp_create_nonce( self::AUTO_LOAD_ACTION ),
 				'loadError' => __( 'Could not load the heating schema. Use “Refresh schema” to try again.', 'salus-i500-heating-schema' ),
 				'savingMessage' => __( 'Saving the heating schedule… Please wait.', 'salus-i500-heating-schema' ),
+				'presenceAction' => self::PRESENCE_ACTION,
+				'presenceNonce'  => wp_create_nonce( self::PRESENCE_ACTION ),
+				'presenceMessage' => __( 'Another user is also on this page. Coordinate before saving changes to avoid overwriting their edits.', 'salus-i500-heating-schema' ),
+				'presenceError'   => __( 'Could not check whether another user is on this page. Please reload the page to try again.', 'salus-i500-heating-schema' ),
 			)
 		);
 		wp_add_inline_script(
@@ -131,6 +137,57 @@ final class Salus_iT500_Heating_Schema {
 						error.textContent = exception.message || salusI500Schema.loadError;
 						error.hidden = false;
 					});
+				});
+
+				document.addEventListener("DOMContentLoaded", function() {
+					var notice = document.querySelector("[data-salus-presence]");
+					if (!notice) {
+						return;
+					}
+
+					var message = notice.querySelector("p");
+					var checking = false;
+					var checkPresence = function() {
+						if (checking) {
+							return;
+						}
+						checking = true;
+
+						var body = new URLSearchParams({
+							action: salusI500Schema.presenceAction,
+							nonce: salusI500Schema.presenceNonce
+						});
+						fetch(salusI500Schema.ajaxUrl, {
+							method: "POST",
+							credentials: "same-origin",
+							headers: { "Content-Type": "application/x-www-form-urlencoded; charset=UTF-8" },
+							body: body.toString()
+						}).then(function(response) {
+							return response.json().then(function(payload) {
+								if (!response.ok || !payload.success) {
+									throw new Error(salusI500Schema.presenceError);
+								}
+								return payload;
+							});
+						}).then(function(payload) {
+							notice.hidden = !payload.data.otherUserActive;
+							notice.classList.remove("notice-error");
+							notice.classList.toggle("notice-warning", payload.data.otherUserActive);
+							if (payload.data.otherUserActive) {
+								message.textContent = salusI500Schema.presenceMessage;
+							}
+						}).catch(function() {
+							notice.hidden = false;
+							notice.classList.remove("notice-warning");
+							notice.classList.add("notice-error");
+							message.textContent = salusI500Schema.presenceError;
+						}).then(function() {
+							checking = false;
+						});
+					};
+
+					checkPresence();
+					window.setInterval(checkPresence, 30000);
 				});
 
 				document.addEventListener("submit", function(event) {
@@ -287,6 +344,7 @@ final class Salus_iT500_Heating_Schema {
 		<div class="wrap">
 			<h1><?php esc_html_e( 'Heating schema', 'salus-i500-heating-schema' ); ?></h1>
 			<p class="salus-schema-intro"><?php esc_html_e( 'Your heating week at a glance. Each time shows when the target temperature changes; it remains in effect until the next listed time. Temperatures use the unit configured on your thermostat. Edit and save schedules one heating zone at a time.', 'salus-i500-heating-schema' ); ?></p>
+			<div class="notice notice-warning salus-schema-presence" data-salus-presence role="status" aria-live="polite" hidden><p></p></div>
 			<?php self::render_connection_notice(); ?>
 			<form action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>" method="post">
 				<input type="hidden" name="action" value="<?php echo esc_attr( self::SCHEMA_ACTION ); ?>">
@@ -448,6 +506,44 @@ final class Salus_iT500_Heating_Schema {
 		}
 
 		wp_send_json_success();
+	}
+
+	public static function update_schema_presence() {
+		if ( ! current_user_can( 'manage_options' ) ) {
+			wp_send_json_error(
+				array( 'message' => __( 'You are not allowed to check schema page presence.', 'salus-i500-heating-schema' ) ),
+				403
+			);
+		}
+		if ( false === check_ajax_referer( self::PRESENCE_ACTION, 'nonce', false ) ) {
+			wp_send_json_error(
+				array( 'message' => __( 'The schema presence request could not be verified. Reload the page and try again.', 'salus-i500-heating-schema' ) ),
+				403
+			);
+		}
+
+		$user_id   = get_current_user_id();
+		$meta_key  = self::schema_presence_meta_key();
+		$last_seen = time();
+		update_user_meta( $user_id, $meta_key, $last_seen );
+
+		$active_users = get_users(
+			array(
+				'fields'     => 'ID',
+				'number'     => 1,
+				'exclude'    => array( $user_id ),
+				'meta_query' => array(
+					array(
+						'key'     => $meta_key,
+						'value'   => $last_seen - 75,
+						'compare' => '>=',
+						'type'    => 'NUMERIC',
+					),
+				),
+			)
+		);
+
+		wp_send_json_success( array( 'otherUserActive' => ! empty( $active_users ) ) );
 	}
 
 	private static function retrieve_schema() {
@@ -985,6 +1081,10 @@ final class Salus_iT500_Heating_Schema {
 	private static function schema_cache_key() {
 		$credentials = self::get_credentials();
 		return 'salus_i500_schema_' . md5( $credentials['username'] );
+	}
+
+	private static function schema_presence_meta_key() {
+		return 'salus_i500_schema_presence_' . get_current_blog_id();
 	}
 
 	private static function get_credentials() {

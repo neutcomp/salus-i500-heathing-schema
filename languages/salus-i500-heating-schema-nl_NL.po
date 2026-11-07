@@ -235,3 +235,15 @@ msgstr "Het programma bevat tekens die niet kunnen worden gedecodeerd."
 
 msgid "The programme contains an invalid time or temperature."
 msgstr "Het programma bevat een ongeldige tijd of temperatuur."
+
+msgid "Another user is also on this page. Coordinate before saving changes to avoid overwriting their edits."
+msgstr "Er is ook een andere gebruiker op deze pagina. Stem wijzigingen af voordat u opslaat om te voorkomen dat bewerkingen worden overschreven."
+
+msgid "Could not check whether another user is on this page. Please reload the page to try again."
+msgstr "Kan niet controleren of er een andere gebruiker op deze pagina is. Laad de pagina opnieuw om het opnieuw te proberen."
+
+msgid "You are not allowed to check schema page presence."
+msgstr "U hebt geen toestemming om de aanwezigheid op de schemapagina te controleren."
+
+msgid "The schema presence request could not be verified. Reload the page and try again."
+msgstr "Het aanwezigheidsverzoek voor de schemapagina kon niet worden geverifieerd. Laad de pagina opnieuw en probeer het opnieuw."
