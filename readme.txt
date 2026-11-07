@@ -13,13 +13,13 @@ View Salus iT500 weekly heating programme values, configure account credentials,
 
 Salus iT500 Heating Schema adds a Heating schema > Schema admin screen and settings under Settings > Salus iT500. Enter your Salus account username and password, save them, and refresh the weekly programme values from your iT500.
 
-The schema screen displays programme values for each available heating zone from Monday to Sunday. The iT500 API provides these as proprietary strings, and the pyit500 library does not document their encoding into time/temperature periods. The plugin therefore displays the exact raw values and does not infer a schedule.
+The schema screen decodes programme values for each available heating zone from Monday to Sunday into readable time and target-temperature changes. The original device value is available under each day for troubleshooting. Temperatures are shown in the device's configured unit.
 
 The connection uses the unofficial iT500 authentication flow implemented by pyit500. The API requires an MD5 password digest in the login request. This is compatibility behavior for that protocol, not a recommended password-storage method. TLS certificate verification remains enabled.
 
 The plugin stores credentials in the WordPress options database. Restrict administrator access and protect database backups accordingly. Only connect to accounts and devices you are authorized to use.
 
-The schema is read-only. This plugin does not change heating settings. Retrieved schema data is cached for up to five minutes.
+The schema is a standalone admin page and is read-only. This plugin does not change heating settings. Retrieved schema data is cached for up to five minutes.
 
 == Installation ==
 

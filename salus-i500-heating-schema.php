@@ -13,15 +13,17 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 final class Salus_iT500_Heating_Schema {
-	const OPTION_NAME = 'salus_i500_credentials';
-	const PAGE_SLUG   = 'salus-i500-heating-schema';
-	const TEST_ACTION = 'salus_i500_test_connection';
-	const SCHEMA_ACTION = 'salus_i500_refresh_schema';
-	const API_HOST      = 'https://sal-emea-p01-api.arrayent.com';
+	const OPTION_NAME        = 'salus_i500_credentials';
+	const SCHEMA_PAGE_SLUG   = 'salus-i500-schema';
+	const SETTINGS_PAGE_SLUG = 'salus-i500-settings';
+	const TEST_ACTION        = 'salus_i500_test_connection';
+	const SCHEMA_ACTION      = 'salus_i500_refresh_schema';
+	const API_HOST           = 'https://sal-emea-p01-api.arrayent.com';
 
 	public static function init() {
 		add_action( 'admin_menu', array( __CLASS__, 'add_settings_page' ) );
 		add_action( 'admin_init', array( __CLASS__, 'register_settings' ) );
+		add_action( 'admin_enqueue_scripts', array( __CLASS__, 'enqueue_schema_styles' ) );
 		add_action( 'admin_post_' . self::TEST_ACTION, array( __CLASS__, 'test_connection' ) );
 		add_action( 'admin_post_' . self::SCHEMA_ACTION, array( __CLASS__, 'refresh_schema' ) );
 	}
@@ -34,17 +36,17 @@ final class Salus_iT500_Heating_Schema {
 			__( 'Heating schema', 'salus-i500-heating-schema' ),
 			__( 'Heating schema', 'salus-i500-heating-schema' ),
 			'manage_options',
-			self::PAGE_SLUG,
+			self::SCHEMA_PAGE_SLUG,
 			array( __CLASS__, 'render_schema_page' ),
 			$heater_icon,
 			58
 		);
 		add_submenu_page(
-			self::PAGE_SLUG,
+			self::SCHEMA_PAGE_SLUG,
 			__( 'Schema', 'salus-i500-heating-schema' ),
 			__( 'Schema', 'salus-i500-heating-schema' ),
 			'manage_options',
-			self::PAGE_SLUG,
+			self::SCHEMA_PAGE_SLUG,
 			array( __CLASS__, 'render_schema_page' )
 		);
 
@@ -52,8 +54,21 @@ final class Salus_iT500_Heating_Schema {
 			__( 'Salus iT500', 'salus-i500-heating-schema' ),
 			__( 'Salus iT500', 'salus-i500-heating-schema' ),
 			'manage_options',
-			self::PAGE_SLUG,
+			self::SETTINGS_PAGE_SLUG,
 			array( __CLASS__, 'render_settings_page' )
+		);
+	}
+
+	public static function enqueue_schema_styles( $hook_suffix ) {
+		if ( 'toplevel_page_' . self::SCHEMA_PAGE_SLUG !== $hook_suffix ) {
+			return;
+		}
+
+		wp_register_style( 'salus-i500-schema', false, array(), '0.1.0' );
+		wp_enqueue_style( 'salus-i500-schema' );
+		wp_add_inline_style(
+			'salus-i500-schema',
+			'.salus-schema-intro{max-width:760px;color:#50575e}.salus-schema-device{margin:28px 0 36px}.salus-schema-zone{margin:20px 0 28px}.salus-schema-days{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:12px;max-width:1100px}.salus-schema-day{background:#fff;border:1px solid #dcdcde;border-radius:6px;padding:14px 16px;box-shadow:0 1px 2px rgba(0,0,0,.04)}.salus-schema-day h4{margin:0 0 12px;font-size:14px}.salus-schema-slots{display:flex;flex-wrap:wrap;gap:8px}.salus-schema-slot{display:inline-flex;align-items:center;gap:8px;padding:7px 10px;background:#f0f6fc;border:1px solid #c5d9ed;border-radius:4px;color:#1d2327}.salus-schema-slot time{font-weight:600}.salus-schema-slot strong{color:#135e96}.salus-schema-empty{color:#646970;font-style:italic}.salus-schema-raw{margin-top:12px;color:#646970}.salus-schema-raw code{white-space:normal;overflow-wrap:anywhere}.salus-schema-warning{color:#b32d2e}@media(max-width:600px){.salus-schema-days{grid-template-columns:1fr}}'
 		);
 	}
 
@@ -68,14 +83,14 @@ final class Salus_iT500_Heating_Schema {
 			'salus_i500_account',
 			__( 'Salus account', 'salus-i500-heating-schema' ),
 			array( __CLASS__, 'render_section_description' ),
-			self::PAGE_SLUG
+			self::SETTINGS_PAGE_SLUG
 		);
 
 		add_settings_field(
 			'salus_i500_username',
 			__( 'Username', 'salus-i500-heating-schema' ),
 			array( __CLASS__, 'render_username_field' ),
-			self::PAGE_SLUG,
+			self::SETTINGS_PAGE_SLUG,
 			'salus_i500_account'
 		);
 
@@ -83,7 +98,7 @@ final class Salus_iT500_Heating_Schema {
 			'salus_i500_password',
 			__( 'Password', 'salus-i500-heating-schema' ),
 			array( __CLASS__, 'render_password_field' ),
-			self::PAGE_SLUG,
+			self::SETTINGS_PAGE_SLUG,
 			'salus_i500_account'
 		);
 	}
@@ -154,7 +169,7 @@ final class Salus_iT500_Heating_Schema {
 			<form action="options.php" method="post">
 				<?php
 				settings_fields( 'salus_i500_settings' );
-				do_settings_sections( self::PAGE_SLUG );
+				do_settings_sections( self::SETTINGS_PAGE_SLUG );
 				submit_button( __( 'Save credentials', 'salus-i500-heating-schema' ) );
 				?>
 			</form>
@@ -179,9 +194,8 @@ final class Salus_iT500_Heating_Schema {
 		?>
 		<div class="wrap">
 			<h1><?php esc_html_e( 'Heating schema', 'salus-i500-heating-schema' ); ?></h1>
-			<p><?php esc_html_e( 'Weekly programme values read from your Salus iT500. This page does not change heating settings.', 'salus-i500-heating-schema' ); ?></p>
+			<p class="salus-schema-intro"><?php esc_html_e( 'Your heating week at a glance. Each time shows when the target temperature changes; it remains in effect until the next listed time. Temperatures use the unit configured on your thermostat. This page is read-only.', 'salus-i500-heating-schema' ); ?></p>
 			<?php self::render_connection_notice(); ?>
-			<p><?php esc_html_e( 'The iT500 API returns each day’s programme as a proprietary value. The pyit500 library does not document how to decode these into time and temperature periods, so values are shown exactly as returned rather than guessed.', 'salus-i500-heating-schema' ); ?></p>
 			<form action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>" method="post">
 				<input type="hidden" name="action" value="<?php echo esc_attr( self::SCHEMA_ACTION ); ?>">
 				<?php wp_nonce_field( self::SCHEMA_ACTION ); ?>
@@ -204,29 +218,46 @@ final class Salus_iT500_Heating_Schema {
 
 	private static function render_device_schema( $device ) {
 		?>
-		<h2><?php echo esc_html( $device['name'] ); ?></h2>
+		<section class="salus-schema-device">
+			<h2><?php echo esc_html( $device['name'] ); ?></h2>
 		<?php
 		foreach ( $device['zones'] as $zone ) {
 			?>
-			<h3><?php echo esc_html( $zone['name'] ); ?></h3>
-			<table class="widefat striped" style="max-width: 900px">
-				<thead>
-					<tr>
-						<th><?php esc_html_e( 'Day', 'salus-i500-heating-schema' ); ?></th>
-						<th><?php esc_html_e( 'Programme value (raw)', 'salus-i500-heating-schema' ); ?></th>
-					</tr>
-				</thead>
-				<tbody>
+			<section class="salus-schema-zone">
+				<h3><?php echo esc_html( $zone['name'] ); ?></h3>
+				<div class="salus-schema-days">
 					<?php foreach ( $zone['days'] as $day ) : ?>
-						<tr>
-							<th scope="row"><?php echo esc_html( $day['name'] ); ?></th>
-							<td><code><?php echo esc_html( $day['value'] ); ?></code></td>
-						</tr>
+						<article class="salus-schema-day">
+							<h4><?php echo esc_html( $day['name'] ); ?></h4>
+							<?php $slots = self::decode_heating_program( $day['value'] ); ?>
+							<?php if ( is_wp_error( $slots ) ) : ?>
+								<p class="salus-schema-warning"><?php esc_html_e( 'This programme could not be decoded.', 'salus-i500-heating-schema' ); ?></p>
+							<?php elseif ( empty( $slots ) ) : ?>
+								<p class="salus-schema-empty"><?php esc_html_e( 'No temperature changes are set for this day.', 'salus-i500-heating-schema' ); ?></p>
+							<?php else : ?>
+								<div class="salus-schema-slots">
+									<?php foreach ( $slots as $slot ) : ?>
+										<span class="salus-schema-slot">
+											<time><?php echo esc_html( $slot['time'] ); ?></time>
+											<span aria-hidden="true">&rarr;</span>
+											<strong><?php echo esc_html( $slot['temperature'] ); ?>&deg;</strong>
+										</span>
+									<?php endforeach; ?>
+								</div>
+							<?php endif; ?>
+							<details class="salus-schema-raw">
+								<summary><?php esc_html_e( 'View original device value', 'salus-i500-heating-schema' ); ?></summary>
+								<code><?php echo esc_html( $day['value'] ); ?></code>
+							</details>
+						</article>
 					<?php endforeach; ?>
-				</tbody>
-			</table>
+				</div>
+			</section>
 			<?php
 		}
+		?>
+		</section>
+		<?php
 	}
 
 	public static function refresh_schema() {
@@ -490,6 +521,44 @@ final class Salus_iT500_Heating_Schema {
 		return $attributes;
 	}
 
+	private static function decode_heating_program( $program ) {
+		$program = trim( (string) $program );
+		if ( '' === $program ) {
+			return array();
+		}
+		if ( 0 !== strlen( $program ) % 4 ) {
+			return new WP_Error( 'salus_schedule_invalid_length', __( 'The programme value has an unsupported format.', 'salus-i500-heating-schema' ) );
+		}
+
+		$slots = array();
+		for ( $offset = 0; $offset < strlen( $program ); $offset += 4 ) {
+			$group  = substr( $program, $offset, 4 );
+			$values = array();
+			for ( $index = 0; $index < 4; $index++ ) {
+				$value = ord( $group[ $index ] ) - 48;
+				if ( $value < 0 || $value > 74 ) {
+					return new WP_Error( 'salus_schedule_invalid_character', __( 'The programme contains characters that cannot be decoded.', 'salus-i500-heating-schema' ) );
+				}
+				$values[] = $value;
+			}
+
+			list( $hour, $minute, $whole_degrees, $tenths ) = $values;
+			if ( 0 === $hour && 0 === $minute && 0 === $whole_degrees && 0 === $tenths ) {
+				break;
+			}
+			if ( $hour > 23 || $minute > 59 || $whole_degrees > 50 || $tenths > 9 ) {
+				return new WP_Error( 'salus_schedule_invalid_entry', __( 'The programme contains an invalid time or temperature.', 'salus-i500-heating-schema' ) );
+			}
+
+			$slots[] = array(
+				'time'        => sprintf( '%02d:%02d', $hour, $minute ),
+				'temperature' => number_format( $whole_degrees + ( $tenths / 10 ), 1, '.', '' ),
+			);
+		}
+
+		return $slots;
+	}
+
 	private static function xml_child_value( $node, $child_name ) {
 		$matches = $node->xpath( './*[local-name()="' . $child_name . '"]' );
 		if ( false === $matches || empty( $matches ) ) {
@@ -545,12 +614,12 @@ final class Salus_iT500_Heating_Schema {
 	}
 
 	private static function redirect_to_settings() {
-		wp_safe_redirect( admin_url( 'options-general.php?page=' . self::PAGE_SLUG ) );
+		wp_safe_redirect( admin_url( 'options-general.php?page=' . self::SETTINGS_PAGE_SLUG ) );
 		exit;
 	}
 
 	private static function redirect_to_schema() {
-		wp_safe_redirect( admin_url( 'admin.php?page=' . self::PAGE_SLUG ) );
+		wp_safe_redirect( admin_url( 'admin.php?page=' . self::SCHEMA_PAGE_SLUG ) );
 		exit;
 	}
 }
