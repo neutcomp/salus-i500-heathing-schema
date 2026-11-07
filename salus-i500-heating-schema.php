@@ -1,7 +1,7 @@
 <?php
 /**
  * Plugin Name: Salus iT500 Heating Schema
- * Description: Configure Salus iT500 API credentials and test the connection.
+ * Description: View Salus iT500 weekly heating programme values.
  * Version: 0.1.0
  * Requires at least: 6.0
  * Requires PHP: 7.4
@@ -16,14 +16,38 @@ final class Salus_iT500_Heating_Schema {
 	const OPTION_NAME = 'salus_i500_credentials';
 	const PAGE_SLUG   = 'salus-i500-heating-schema';
 	const TEST_ACTION = 'salus_i500_test_connection';
+	const SCHEMA_ACTION = 'salus_i500_refresh_schema';
+	const API_HOST      = 'https://sal-emea-p01-api.arrayent.com';
 
 	public static function init() {
 		add_action( 'admin_menu', array( __CLASS__, 'add_settings_page' ) );
 		add_action( 'admin_init', array( __CLASS__, 'register_settings' ) );
 		add_action( 'admin_post_' . self::TEST_ACTION, array( __CLASS__, 'test_connection' ) );
+		add_action( 'admin_post_' . self::SCHEMA_ACTION, array( __CLASS__, 'refresh_schema' ) );
 	}
 
 	public static function add_settings_page() {
+		$heater_icon = 'data:image/svg+xml;base64,' . base64_encode(
+			'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20"><path fill="#a7aaad" d="M3 2h2v3h2V2h2v3h2V2h2v3h2V2h2v3h1v12h-2v-3H4v3H2V5h1V2zm1 5v5h12V7H4zm2 1h2v3H6V8zm4 0h2v3h-2V8zm4 0h2v3h-2V8z"/></svg>'
+		);
+		add_menu_page(
+			__( 'Heating schema', 'salus-i500-heating-schema' ),
+			__( 'Heating schema', 'salus-i500-heating-schema' ),
+			'manage_options',
+			self::PAGE_SLUG,
+			array( __CLASS__, 'render_schema_page' ),
+			$heater_icon,
+			58
+		);
+		add_submenu_page(
+			self::PAGE_SLUG,
+			__( 'Schema', 'salus-i500-heating-schema' ),
+			__( 'Schema', 'salus-i500-heating-schema' ),
+			'manage_options',
+			self::PAGE_SLUG,
+			array( __CLASS__, 'render_schema_page' )
+		);
+
 		add_options_page(
 			__( 'Salus iT500', 'salus-i500-heating-schema' ),
 			__( 'Salus iT500', 'salus-i500-heating-schema' ),
@@ -146,6 +170,188 @@ final class Salus_iT500_Heating_Schema {
 		<?php
 	}
 
+	public static function render_schema_page() {
+		if ( ! current_user_can( 'manage_options' ) ) {
+			return;
+		}
+
+		$schema = get_transient( self::schema_cache_key() );
+		?>
+		<div class="wrap">
+			<h1><?php esc_html_e( 'Heating schema', 'salus-i500-heating-schema' ); ?></h1>
+			<p><?php esc_html_e( 'Weekly programme values read from your Salus iT500. This page does not change heating settings.', 'salus-i500-heating-schema' ); ?></p>
+			<?php self::render_connection_notice(); ?>
+			<p><?php esc_html_e( 'The iT500 API returns each day’s programme as a proprietary value. The pyit500 library does not document how to decode these into time and temperature periods, so values are shown exactly as returned rather than guessed.', 'salus-i500-heating-schema' ); ?></p>
+			<form action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>" method="post">
+				<input type="hidden" name="action" value="<?php echo esc_attr( self::SCHEMA_ACTION ); ?>">
+				<?php wp_nonce_field( self::SCHEMA_ACTION ); ?>
+				<?php submit_button( __( 'Refresh schema', 'salus-i500-heating-schema' ), 'secondary', 'submit', false ); ?>
+			</form>
+			<?php
+			if ( is_array( $schema ) && ! empty( $schema['devices'] ) ) {
+				foreach ( $schema['devices'] as $device ) {
+					self::render_device_schema( $device );
+				}
+			} elseif ( is_array( $schema ) && isset( $schema['devices'] ) ) {
+				echo '<p>' . esc_html__( 'No devices were returned for this account.', 'salus-i500-heating-schema' ) . '</p>';
+			} else {
+				echo '<p>' . esc_html__( 'No schema has been loaded yet. Select “Refresh schema” to read it from Salus.', 'salus-i500-heating-schema' ) . '</p>';
+			}
+			?>
+		</div>
+		<?php
+	}
+
+	private static function render_device_schema( $device ) {
+		?>
+		<h2><?php echo esc_html( $device['name'] ); ?></h2>
+		<?php
+		foreach ( $device['zones'] as $zone ) {
+			?>
+			<h3><?php echo esc_html( $zone['name'] ); ?></h3>
+			<table class="widefat striped" style="max-width: 900px">
+				<thead>
+					<tr>
+						<th><?php esc_html_e( 'Day', 'salus-i500-heating-schema' ); ?></th>
+						<th><?php esc_html_e( 'Programme value (raw)', 'salus-i500-heating-schema' ); ?></th>
+					</tr>
+				</thead>
+				<tbody>
+					<?php foreach ( $zone['days'] as $day ) : ?>
+						<tr>
+							<th scope="row"><?php echo esc_html( $day['name'] ); ?></th>
+							<td><code><?php echo esc_html( $day['value'] ); ?></code></td>
+						</tr>
+					<?php endforeach; ?>
+				</tbody>
+			</table>
+			<?php
+		}
+	}
+
+	public static function refresh_schema() {
+		if ( ! current_user_can( 'manage_options' ) ) {
+			wp_die( esc_html__( 'You are not allowed to refresh the heating schema.', 'salus-i500-heating-schema' ) );
+		}
+		check_admin_referer( self::SCHEMA_ACTION );
+
+		$credentials = self::get_credentials();
+		if ( '' === $credentials['username'] || '' === $credentials['password'] ) {
+			self::store_connection_result(
+				'error',
+				__( 'Enter and save your Salus username and password in Settings > Salus iT500 first.', 'salus-i500-heating-schema' )
+			);
+			self::redirect_to_schema();
+		}
+
+		$auth = self::authenticate( $credentials );
+		if ( is_wp_error( $auth ) ) {
+			self::store_connection_result( 'error', $auth->get_error_message() );
+			self::redirect_to_schema();
+		}
+
+		$device_list = self::api_post(
+			'getDeviceList',
+			array(
+				'userId'   => $auth['userId'],
+				'secToken' => $auth['securityToken'],
+			)
+		);
+		if ( is_wp_error( $device_list ) ) {
+			self::store_connection_result( 'error', $device_list->get_error_message() );
+			self::redirect_to_schema();
+		}
+
+		$devices_xml = self::parse_api_xml( $device_list, 'getDeviceListResponse' );
+		if ( is_wp_error( $devices_xml ) ) {
+			self::store_connection_result( 'error', $devices_xml->get_error_message() );
+			self::redirect_to_schema();
+		}
+
+		$device_nodes = $devices_xml->xpath( '//*[local-name()="devList"]' );
+		if ( false === $device_nodes ) {
+			self::store_connection_result( 'error', __( 'Could not read the Salus device list.', 'salus-i500-heating-schema' ) );
+			self::redirect_to_schema();
+		}
+
+		$devices = array();
+		foreach ( $device_nodes as $device_node ) {
+			$device_id = self::xml_child_value( $device_node, 'devId' );
+			if ( '' === $device_id ) {
+				continue;
+			}
+
+			$attributes_response = self::api_post(
+				'getDeviceAttributesWithValues',
+				array(
+					'userId'   => $auth['userId'],
+					'secToken' => $auth['securityToken'],
+					'devId'    => $device_id,
+				)
+			);
+			if ( is_wp_error( $attributes_response ) ) {
+				self::store_connection_result( 'error', $attributes_response->get_error_message() );
+				self::redirect_to_schema();
+			}
+
+			$attributes_xml = self::parse_api_xml( $attributes_response, 'getDeviceAttributesWithValuesResponse' );
+			if ( is_wp_error( $attributes_xml ) ) {
+				self::store_connection_result( 'error', $attributes_xml->get_error_message() );
+				self::redirect_to_schema();
+			}
+
+			$attributes = self::extract_device_attributes( $attributes_xml );
+			if ( is_wp_error( $attributes ) ) {
+				self::store_connection_result( 'error', $attributes->get_error_message() );
+				self::redirect_to_schema();
+			}
+
+			$zones = array();
+			foreach ( array( 'A' => __( 'Heating zone 1', 'salus-i500-heating-schema' ), 'B' => __( 'Heating zone 2', 'salus-i500-heating-schema' ) ) as $prefix => $zone_name ) {
+				$days = array();
+				$day_names = array(
+					__( 'Monday', 'salus-i500-heating-schema' ),
+					__( 'Tuesday', 'salus-i500-heating-schema' ),
+					__( 'Wednesday', 'salus-i500-heating-schema' ),
+					__( 'Thursday', 'salus-i500-heating-schema' ),
+					__( 'Friday', 'salus-i500-heating-schema' ),
+					__( 'Saturday', 'salus-i500-heating-schema' ),
+					__( 'Sunday', 'salus-i500-heating-schema' ),
+				);
+				foreach ( $day_names as $day_index => $day_name ) {
+					$attribute_name = $prefix . sprintf( '%02d', $day_index );
+					if ( ! array_key_exists( $attribute_name, $attributes ) ) {
+						continue;
+					}
+					$days[] = array(
+						'name'  => $day_name,
+						'value' => $attributes[ $attribute_name ],
+					);
+				}
+
+				if ( ! empty( $days ) ) {
+					$zones[] = array(
+						'name' => $zone_name,
+						'days' => $days,
+					);
+				}
+			}
+
+			$devices[] = array(
+				'name'  => self::xml_child_value( $device_node, 'devName' ),
+				'zones' => $zones,
+			);
+		}
+
+		set_transient(
+			self::schema_cache_key(),
+			array( 'devices' => $devices ),
+			5 * MINUTE_IN_SECONDS
+		);
+		self::store_connection_result( 'success', __( 'Heating schema refreshed from Salus.', 'salus-i500-heating-schema' ) );
+		self::redirect_to_schema();
+	}
+
 	public static function test_connection() {
 		if ( ! current_user_can( 'manage_options' ) ) {
 			wp_die( esc_html__( 'You are not allowed to test this connection.', 'salus-i500-heating-schema' ) );
@@ -161,9 +367,18 @@ final class Salus_iT500_Heating_Schema {
 			self::redirect_to_settings();
 		}
 
-		$url      = 'https://sal-emea-p01-api.arrayent.com/acc/applications/SalusService/sessions';
+		$auth = self::authenticate( $credentials );
+		if ( is_wp_error( $auth ) ) {
+			self::store_connection_result( 'error', $auth->get_error_message() );
+			self::redirect_to_settings();
+		}
+		self::store_connection_result( 'success', __( 'Authentication succeeded. The session token was not saved.', 'salus-i500-heating-schema' ) );
+		self::redirect_to_settings();
+	}
+
+	private static function authenticate( $credentials ) {
 		$response = wp_remote_post(
-			$url,
+			self::API_HOST . '/acc/applications/SalusService/sessions',
 			array(
 				'timeout'   => 15,
 				'sslverify' => true,
@@ -181,34 +396,112 @@ final class Salus_iT500_Heating_Schema {
 		);
 
 		if ( is_wp_error( $response ) ) {
-			self::store_connection_result( 'error', $response->get_error_message() );
-			self::redirect_to_settings();
+			return new WP_Error( 'salus_connection_failed', $response->get_error_message() );
 		}
 
 		$status = wp_remote_retrieve_response_code( $response );
 		if ( $status < 200 || $status >= 300 ) {
-			self::store_connection_result(
-				'error',
+			return new WP_Error(
+				'salus_auth_http_error',
 				sprintf(
 					/* translators: %d is the HTTP status code returned by the Salus API. */
 					__( 'The Salus API returned HTTP %d during authentication.', 'salus-i500-heating-schema' ),
 					(int) $status
 				)
 			);
-			self::redirect_to_settings();
 		}
 
 		$body = json_decode( wp_remote_retrieve_body( $response ), true );
 		if ( ! is_array( $body ) || empty( $body['userId'] ) || empty( $body['securityToken'] ) ) {
-			self::store_connection_result(
-				'error',
+			return new WP_Error(
+				'salus_auth_invalid_response',
 				__( 'The response did not include the expected authentication details. Check the credentials and API compatibility.', 'salus-i500-heating-schema' )
 			);
-			self::redirect_to_settings();
 		}
 
-		self::store_connection_result( 'success', __( 'Authentication succeeded. The session token was not saved.', 'salus-i500-heating-schema' ) );
-		self::redirect_to_settings();
+		return $body;
+	}
+
+	private static function api_post( $path, $data ) {
+		$response = wp_remote_post(
+			self::API_HOST . '/zdk/services/zamapi/' . $path,
+			array(
+				'timeout'   => 15,
+				'sslverify' => true,
+				'headers'   => array( 'Accept' => 'application/xml, text/xml' ),
+				'body'      => $data,
+			)
+		);
+
+		if ( is_wp_error( $response ) ) {
+			return new WP_Error( 'salus_api_request_failed', $response->get_error_message() );
+		}
+
+		$status = wp_remote_retrieve_response_code( $response );
+		if ( $status < 200 || $status >= 300 ) {
+			return new WP_Error(
+				'salus_api_http_error',
+				sprintf(
+					/* translators: %d is the HTTP status code returned by the Salus API. */
+					__( 'The Salus API returned HTTP %d while reading the heating schema.', 'salus-i500-heating-schema' ),
+					(int) $status
+				)
+			);
+		}
+
+		return wp_remote_retrieve_body( $response );
+	}
+
+	private static function parse_api_xml( $body, $expected_response ) {
+		if ( ! function_exists( 'simplexml_load_string' ) ) {
+			return new WP_Error( 'salus_xml_unavailable', __( 'PHP SimpleXML is required to read Salus API responses.', 'salus-i500-heating-schema' ) );
+		}
+
+		$previous = libxml_use_internal_errors( true );
+		$xml      = simplexml_load_string( $body, 'SimpleXMLElement', LIBXML_NONET | LIBXML_NOCDATA );
+		libxml_clear_errors();
+		libxml_use_internal_errors( $previous );
+		if ( false === $xml ) {
+			return new WP_Error( 'salus_xml_invalid', __( 'The Salus API returned invalid XML while reading the heating schema.', 'salus-i500-heating-schema' ) );
+		}
+
+		$matches = $xml->xpath( '//*[local-name()="' . $expected_response . '"]' );
+		if ( false === $matches || empty( $matches ) ) {
+			return new WP_Error( 'salus_xml_unexpected', __( 'The Salus API response did not contain the expected schema data.', 'salus-i500-heating-schema' ) );
+		}
+
+		return $matches[0];
+	}
+
+	private static function extract_device_attributes( $xml ) {
+		$attribute_nodes = $xml->xpath( './/*[local-name()="attrList"]' );
+		if ( false === $attribute_nodes ) {
+			return new WP_Error( 'salus_attributes_invalid', __( 'Could not read device attributes from the Salus response.', 'salus-i500-heating-schema' ) );
+		}
+
+		$attributes = array();
+		foreach ( $attribute_nodes as $attribute_node ) {
+			$name = self::xml_child_value( $attribute_node, 'name' );
+			if ( '' !== $name ) {
+				$attributes[ $name ] = self::xml_child_value( $attribute_node, 'value' );
+			}
+		}
+
+		return $attributes;
+	}
+
+	private static function xml_child_value( $node, $child_name ) {
+		$matches = $node->xpath( './*[local-name()="' . $child_name . '"]' );
+		if ( false === $matches || empty( $matches ) ) {
+			return '';
+		}
+
+		return (string) $matches[0];
+	}
+
+	private static function schema_cache_key() {
+		$credentials = self::get_credentials();
+		return 'salus_i500_schema_' . md5( $credentials['username'] );
 	}
 
 	private static function get_credentials() {
@@ -253,6 +546,11 @@ final class Salus_iT500_Heating_Schema {
 
 	private static function redirect_to_settings() {
 		wp_safe_redirect( admin_url( 'options-general.php?page=' . self::PAGE_SLUG ) );
+		exit;
+	}
+
+	private static function redirect_to_schema() {
+		wp_safe_redirect( admin_url( 'admin.php?page=' . self::PAGE_SLUG ) );
 		exit;
 	}
 }
