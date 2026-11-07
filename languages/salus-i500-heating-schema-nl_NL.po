@@ -56,8 +56,8 @@ msgstr "Sla uw inloggegevens op voordat u de test uitvoert. Hiermee wordt alleen
 msgid "Test connection"
 msgstr "Verbinding testen"
 
-msgid "Your heating week at a glance. Each time shows when the target temperature changes; it remains in effect until the next listed time. Temperatures use the unit configured on your thermostat. Edit and save schedules one heating zone at a time."
-msgstr "Uw verwarmingsweek in één oogopslag. Elk tijdstip geeft aan wanneer de doeltemperatuur verandert; deze blijft van kracht tot het volgende vermelde tijdstip. Temperaturen worden weergegeven in de eenheid die op uw thermostaat is ingesteld. Bewerk en sla schema's per verwarmingszone op."
+msgid "Edit times and target temperatures directly for each heating zone. Leave both fields empty to remove a point. Temperatures use the unit configured on your thermostat; save each zone separately."
+msgstr "Bewerk tijden en doeltemperaturen direct per verwarmingszone. Laat beide velden leeg om een punt te verwijderen. Temperaturen worden weergegeven in de eenheid die op uw thermostaat is ingesteld; sla elke zone afzonderlijk op."
 
 msgid "Refresh schema"
 msgstr "Schema vernieuwen"
