@@ -95,6 +95,27 @@ msgstr "Voor deze dag zijn geen temperatuurwijzigingen ingesteld."
 msgid "Edit this heating zone"
 msgstr "Deze verwarmingszone bewerken"
 
+msgid "Rename this zone"
+msgstr "Deze zone hernoemen"
+
+msgid "Zone title"
+msgstr "Zonetitel"
+
+msgid "Save zone title"
+msgstr "Zonetitel opslaan"
+
+msgid "You are not allowed to rename heating zones."
+msgstr "U hebt geen toestemming om verwarmingszones te hernoemen."
+
+msgid "Enter a title for this heating zone."
+msgstr "Voer een titel in voor deze verwarmingszone."
+
+msgid "Heating zone title saved."
+msgstr "De titel van de verwarmingszone is opgeslagen."
+
+msgid "Could not save the heating zone title. Please try again."
+msgstr "De titel van de verwarmingszone kon niet worden opgeslagen. Probeer het opnieuw."
+
 msgid "Change up to six time and temperature points per day. Leave both fields empty to remove a point. Saving submits the full weekly schedule for this zone."
 msgstr "Wijzig maximaal zes tijd- en temperatuurpunten per dag. Laat beide velden leeg om een punt te verwijderen. Bij het opslaan wordt het volledige weekschema voor deze zone verzonden."
 

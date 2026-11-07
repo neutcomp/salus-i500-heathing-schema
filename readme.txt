@@ -15,7 +15,7 @@ Salus iT500 Heating Schema adds a Heating schema > Schema admin screen and setti
 
 Users with the WordPress Editor role (Redacteur) can update heating schedules. Configuring account credentials and testing the connection remain administrator-only.
 
-The schema screen automatically retrieves programme values when no data is cached, and shows a loading indicator while retrieving them. Cached schema data is shown immediately. Select Refresh schema to fetch the latest data manually. Each heating zone opens directly in edit mode with its Monday-to-Sunday schedule ready to change. Submit the weekly programme one heating zone at a time. Temperatures are shown in the device's configured unit.
+The schema screen automatically retrieves programme values when no data is cached, and shows a loading indicator while retrieving them. Cached schema data is shown immediately. Select Refresh schema to fetch the latest data manually. Use Rename this zone below a zone heading to set a custom title, which is saved for that Salus account and device. Each heating zone opens directly in edit mode with its Monday-to-Sunday schedule ready to change. Submit the weekly programme one heating zone at a time. Temperatures are shown in the device's configured unit.
 
 When another user has the schema page open, a notice recommends coordinating before saving. Presence updates run every 30 seconds and expire after 75 seconds without a response; this is a heads-up, not an edit lock.
 
@@ -33,7 +33,7 @@ The schema is a standalone admin page. Saving a zone sends schedule changes to t
 4. Enter your account username and password, then select **Save credentials**.
 5. Select **Test connection** under Settings > Salus iT500 to check authentication.
 6. Open Heating schema > Schema. Data loads automatically when there is no cached schema; use **Refresh schema** to retrieve it manually.
-7. Change times or temperatures directly in each heating zone, then select **Save zone schedule**. Each zone is submitted separately.
+7. Optionally select **Rename this zone** below a zone heading to set a custom title. Change times or temperatures directly in each heating zone, then select **Save zone schedule**. Each zone is submitted separately.
 
 == Frequently Asked Questions ==
 

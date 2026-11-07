@@ -24,6 +24,8 @@ final class Salus_iT500_Heating_Schema {
 	const AUTO_LOAD_ACTION   = 'salus_i500_load_schema';
 	const PRESENCE_ACTION    = 'salus_i500_schema_presence';
 	const UPDATE_ACTION      = 'salus_i500_update_zone_schedule';
+	const RENAME_ZONE_ACTION = 'salus_i500_rename_zone';
+	const ZONE_NAMES_OPTION  = 'salus_i500_zone_names';
 	const API_HOST           = 'https://sal-emea-p01-api.arrayent.com';
 
 	public static function init() {
@@ -36,6 +38,7 @@ final class Salus_iT500_Heating_Schema {
 		add_action( 'wp_ajax_' . self::AUTO_LOAD_ACTION, array( __CLASS__, 'auto_load_schema' ) );
 		add_action( 'wp_ajax_' . self::PRESENCE_ACTION, array( __CLASS__, 'update_schema_presence' ) );
 		add_action( 'admin_post_' . self::UPDATE_ACTION, array( __CLASS__, 'update_zone_schedule' ) );
+		add_action( 'admin_post_' . self::RENAME_ZONE_ACTION, array( __CLASS__, 'rename_zone' ) );
 	}
 
 	public static function load_textdomain() {
@@ -384,9 +387,24 @@ final class Salus_iT500_Heating_Schema {
 			<h2><?php echo esc_html( $device['name'] ); ?></h2>
 		<?php
 		foreach ( $device['zones'] as $zone ) {
+			$zone_name = self::get_zone_name( $device['id'], $zone['prefix'], $zone['name'] );
 			?>
 			<section class="salus-schema-zone">
-				<h3><?php echo esc_html( $zone['name'] ); ?></h3>
+				<h3><?php echo esc_html( $zone_name ); ?></h3>
+				<details class="salus-schema-rename">
+					<summary><?php esc_html_e( 'Rename this zone', 'salus-i500-heating-schema' ); ?></summary>
+					<form action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>" method="post">
+						<input type="hidden" name="action" value="<?php echo esc_attr( self::RENAME_ZONE_ACTION ); ?>">
+						<input type="hidden" name="device_id" value="<?php echo esc_attr( $device['id'] ); ?>">
+						<input type="hidden" name="zone_prefix" value="<?php echo esc_attr( $zone['prefix'] ); ?>">
+						<?php wp_nonce_field( self::RENAME_ZONE_ACTION ); ?>
+						<label>
+							<span class="screen-reader-text"><?php esc_html_e( 'Zone title', 'salus-i500-heating-schema' ); ?></span>
+							<input type="text" name="zone_name" value="<?php echo esc_attr( $zone_name ); ?>" maxlength="80" required>
+						</label>
+						<?php submit_button( __( 'Save zone title', 'salus-i500-heating-schema' ), 'secondary', 'submit', false ); ?>
+					</form>
+				</details>
 				<?php self::render_zone_editor( $device, $zone ); ?>
 			</section>
 			<?php
@@ -444,6 +462,66 @@ final class Salus_iT500_Heating_Schema {
 			<?php endif; ?>
 		</details>
 		<?php
+	}
+
+	public static function rename_zone() {
+		if ( ! current_user_can( self::SCHEMA_CAPABILITY ) ) {
+			wp_die( esc_html__( 'You are not allowed to rename heating zones.', 'salus-i500-heating-schema' ) );
+		}
+		check_admin_referer( self::RENAME_ZONE_ACTION );
+
+		$device_id   = isset( $_POST['device_id'] ) ? sanitize_text_field( wp_unslash( $_POST['device_id'] ) ) : '';
+		$zone_prefix = isset( $_POST['zone_prefix'] ) ? sanitize_text_field( wp_unslash( $_POST['zone_prefix'] ) ) : '';
+		$zone_name   = isset( $_POST['zone_name'] ) ? sanitize_text_field( wp_unslash( $_POST['zone_name'] ) ) : '';
+		if ( '' === $zone_name ) {
+			self::store_connection_result( 'error', __( 'Enter a title for this heating zone.', 'salus-i500-heating-schema' ) );
+			self::redirect_to_schema();
+		}
+
+		$schema = get_transient( self::schema_cache_key() );
+		$zone_exists = false;
+		if ( is_array( $schema ) && ! empty( $schema['devices'] ) ) {
+			foreach ( $schema['devices'] as $device ) {
+				if ( ! isset( $device['id'] ) || (string) $device['id'] !== $device_id ) {
+					continue;
+				}
+				foreach ( $device['zones'] as $zone ) {
+					if ( isset( $zone['prefix'] ) && $zone['prefix'] === $zone_prefix ) {
+						$zone_exists = true;
+						break 2;
+					}
+				}
+			}
+		}
+
+		if ( ! $zone_exists || ! in_array( $zone_prefix, array( 'A', 'B' ), true ) ) {
+			self::store_connection_result( 'error', __( 'The selected heating zone is no longer available. Refresh the schema and try again.', 'salus-i500-heating-schema' ) );
+			self::redirect_to_schema();
+		}
+
+		$zone_names = get_option( self::ZONE_NAMES_OPTION, array() );
+		if ( ! is_array( $zone_names ) ) {
+			$zone_names = array();
+		}
+		$account_key = self::zone_names_account_key();
+		if ( ! isset( $zone_names[ $account_key ] ) || ! is_array( $zone_names[ $account_key ] ) ) {
+			$zone_names[ $account_key ] = array();
+		}
+		if ( ! isset( $zone_names[ $account_key ][ $device_id ] ) || ! is_array( $zone_names[ $account_key ][ $device_id ] ) ) {
+			$zone_names[ $account_key ][ $device_id ] = array();
+		}
+		if ( isset( $zone_names[ $account_key ][ $device_id ][ $zone_prefix ] ) && $zone_names[ $account_key ][ $device_id ][ $zone_prefix ] === $zone_name ) {
+			self::store_connection_result( 'success', __( 'Heating zone title saved.', 'salus-i500-heating-schema' ) );
+			self::redirect_to_schema();
+		}
+		$zone_names[ $account_key ][ $device_id ][ $zone_prefix ] = $zone_name;
+		if ( ! update_option( self::ZONE_NAMES_OPTION, $zone_names, false ) ) {
+			self::store_connection_result( 'error', __( 'Could not save the heating zone title. Please try again.', 'salus-i500-heating-schema' ) );
+			self::redirect_to_schema();
+		}
+
+		self::store_connection_result( 'success', __( 'Heating zone title saved.', 'salus-i500-heating-schema' ) );
+		self::redirect_to_schema();
 	}
 
 	public static function refresh_schema() {
@@ -1059,6 +1137,30 @@ final class Salus_iT500_Heating_Schema {
 	private static function schema_cache_key() {
 		$credentials = self::get_credentials();
 		return 'salus_i500_schema_' . md5( $credentials['username'] );
+	}
+
+	private static function zone_names_account_key() {
+		$credentials = self::get_credentials();
+		return md5( $credentials['username'] );
+	}
+
+	private static function get_zone_name( $device_id, $zone_prefix, $default_name ) {
+		$zone_names = get_option( self::ZONE_NAMES_OPTION, array() );
+		$account_key = self::zone_names_account_key();
+		if (
+			is_array( $zone_names )
+			&& isset( $zone_names[ $account_key ] )
+			&& is_array( $zone_names[ $account_key ] )
+			&& isset( $zone_names[ $account_key ][ $device_id ] )
+			&& is_array( $zone_names[ $account_key ][ $device_id ] )
+			&& isset( $zone_names[ $account_key ][ $device_id ][ $zone_prefix ] )
+			&& is_string( $zone_names[ $account_key ][ $device_id ][ $zone_prefix ] )
+			&& '' !== $zone_names[ $account_key ][ $device_id ][ $zone_prefix ]
+		) {
+			return $zone_names[ $account_key ][ $device_id ][ $zone_prefix ];
+		}
+
+		return $default_name;
 	}
 
 	private static function schema_presence_meta_key() {
