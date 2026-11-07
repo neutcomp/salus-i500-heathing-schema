@@ -16,6 +16,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 
 final class Salus_iT500_Heating_Schema {
 	const OPTION_NAME        = 'salus_i500_credentials';
+	const SCHEMA_CAPABILITY  = 'edit_pages';
 	const SCHEMA_PAGE_SLUG   = 'salus-i500-schema';
 	const SETTINGS_PAGE_SLUG = 'salus-i500-settings';
 	const TEST_ACTION        = 'salus_i500_test_connection';
@@ -52,7 +53,7 @@ final class Salus_iT500_Heating_Schema {
 		add_menu_page(
 			__( 'Heating schema', 'salus-i500-heating-schema' ),
 			__( 'Heating schema', 'salus-i500-heating-schema' ),
-			'manage_options',
+			self::SCHEMA_CAPABILITY,
 			self::SCHEMA_PAGE_SLUG,
 			array( __CLASS__, 'render_schema_page' ),
 			$heater_icon,
@@ -62,7 +63,7 @@ final class Salus_iT500_Heating_Schema {
 			self::SCHEMA_PAGE_SLUG,
 			__( 'Schema', 'salus-i500-heating-schema' ),
 			__( 'Schema', 'salus-i500-heating-schema' ),
-			'manage_options',
+			self::SCHEMA_CAPABILITY,
 			self::SCHEMA_PAGE_SLUG,
 			array( __CLASS__, 'render_schema_page' )
 		);
@@ -335,7 +336,7 @@ final class Salus_iT500_Heating_Schema {
 	}
 
 	public static function render_schema_page() {
-		if ( ! current_user_can( 'manage_options' ) ) {
+		if ( ! current_user_can( self::SCHEMA_CAPABILITY ) ) {
 			return;
 		}
 
@@ -469,7 +470,7 @@ final class Salus_iT500_Heating_Schema {
 	}
 
 	public static function refresh_schema() {
-		if ( ! current_user_can( 'manage_options' ) ) {
+		if ( ! current_user_can( self::SCHEMA_CAPABILITY ) ) {
 			wp_die( esc_html__( 'You are not allowed to refresh the heating schema.', 'salus-i500-heating-schema' ) );
 		}
 		check_admin_referer( self::SCHEMA_ACTION );
@@ -484,7 +485,7 @@ final class Salus_iT500_Heating_Schema {
 	}
 
 	public static function auto_load_schema() {
-		if ( ! current_user_can( 'manage_options' ) ) {
+		if ( ! current_user_can( self::SCHEMA_CAPABILITY ) ) {
 			wp_send_json_error(
 				array( 'message' => __( 'You are not allowed to load the heating schema.', 'salus-i500-heating-schema' ) ),
 				403
@@ -509,7 +510,7 @@ final class Salus_iT500_Heating_Schema {
 	}
 
 	public static function update_schema_presence() {
-		if ( ! current_user_can( 'manage_options' ) ) {
+		if ( ! current_user_can( self::SCHEMA_CAPABILITY ) ) {
 			wp_send_json_error(
 				array( 'message' => __( 'You are not allowed to check schema page presence.', 'salus-i500-heating-schema' ) ),
 				403
@@ -659,7 +660,7 @@ final class Salus_iT500_Heating_Schema {
 	}
 
 	public static function update_zone_schedule() {
-		if ( ! current_user_can( 'manage_options' ) ) {
+		if ( ! current_user_can( self::SCHEMA_CAPABILITY ) ) {
 			wp_die( esc_html__( 'You are not allowed to update heating schedules.', 'salus-i500-heating-schema' ) );
 		}
 		check_admin_referer( self::UPDATE_ACTION );

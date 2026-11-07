@@ -2,6 +2,8 @@
 
 This WordPress plugin adds a standalone **Heating schema → Schema** admin screen and account settings under **Settings → Salus iT500**.
 
+Users with the WordPress **Editor** role (**Redacteur**) can view and update heating schedules. Configuring account credentials and testing the connection remain administrator-only.
+
 ## Connection and weekly schema
 
 1. Enter your Salus account username and password, then save them.
@@ -10,7 +12,7 @@ This WordPress plugin adds a standalone **Heating schema → Schema** admin scre
 4. The weekly view decodes each heating zone's Monday-to-Sunday programme into readable time and target-temperature changes.
 5. Expand **Edit this heating zone** to change its schedule. Leave both fields empty to remove a point, then select **Save zone schedule**. Each zone is submitted separately.
 
-When another administrator has the schema page open, a notice appears recommending that you coordinate before saving. Presence updates run every 30 seconds and expire after 75 seconds without a response; this is a heads-up, not an edit lock.
+When another user has the schema page open, a notice appears recommending that you coordinate before saving. Presence updates run every 30 seconds and expire after 75 seconds without a response; this is a heads-up, not an edit lock.
 
 The connection uses the unofficial authentication flow implemented by [`pyit500`](https://github.com/RichyA/pyit500): HTTPS to the Arrayent Salus service and an MD5 password digest in the JSON login request. The digest is compatibility behavior required by that protocol, not a recommended password-storage mechanism. TLS certificate verification remains enabled.
 
