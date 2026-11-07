@@ -1,0 +1,219 @@
+msgid ""
+msgstr ""
+"Project-Id-Version: Salus iT500 Heating Schema 0.1.0\n"
+"PO-Revision-Date: 2026-11-07 10:26+0100\n"
+"Last-Translator: Salus iT500 Heating Schema contributors\n"
+"Language-Team: Dutch (Netherlands)\n"
+"Language: nl_NL\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+
+#: salus-i500-heating-schema.php
+msgid "Heating schema"
+msgstr "Verwarmingsschema"
+
+msgid "Schema"
+msgstr "Schema"
+
+msgid "Salus iT500"
+msgstr "Salus iT500"
+
+msgid "Salus account"
+msgstr "Salus-account"
+
+msgid "Username"
+msgstr "Gebruikersnaam"
+
+msgid "Password"
+msgstr "Wachtwoord"
+
+msgid "Credentials are stored in this WordPress site and sent to the Salus API only when you test the connection."
+msgstr "Inloggegevens worden op deze WordPress-site opgeslagen en alleen naar de Salus-API verzonden wanneer u de verbinding test."
+
+msgid "This uses the unofficial iT500 API authentication flow. The password is MD5-hashed as required by that protocol; this is not a general-purpose password security measure."
+msgstr "Dit gebruikt de niet-officiële iT500 API-authenticatiestroom. Het wachtwoord wordt gehasht met MD5, zoals vereist door dit protocol; dit is geen algemene methode om wachtwoorden te beveiligen."
+
+msgid "A password is saved. Leave this blank to keep it, or select the checkbox below to clear it."
+msgstr "Er is een wachtwoord opgeslagen. Laat dit veld leeg om het te behouden, of vink hieronder het vakje aan om het te wissen."
+
+msgid "No password is saved."
+msgstr "Er is geen wachtwoord opgeslagen."
+
+msgid "Clear the saved password"
+msgstr "Opgeslagen wachtwoord wissen"
+
+msgid "Save credentials"
+msgstr "Inloggegevens opslaan"
+
+msgid "Connection test"
+msgstr "Verbindingstest"
+
+msgid "Save your credentials before testing. This checks authentication only and does not change any heating settings."
+msgstr "Sla uw inloggegevens op voordat u de test uitvoert. Hiermee wordt alleen de authenticatie gecontroleerd; er worden geen verwarmingsinstellingen gewijzigd."
+
+msgid "Test connection"
+msgstr "Verbinding testen"
+
+msgid "Your heating week at a glance. Each time shows when the target temperature changes; it remains in effect until the next listed time. Temperatures use the unit configured on your thermostat. Edit and save schedules one heating zone at a time."
+msgstr "Uw verwarmingsweek in één oogopslag. Elk tijdstip geeft aan wanneer de doeltemperatuur verandert; deze blijft van kracht tot het volgende vermelde tijdstip. Temperaturen worden weergegeven in de eenheid die op uw thermostaat is ingesteld. Bewerk en sla schema's per verwarmingszone op."
+
+msgid "Refresh schema"
+msgstr "Schema vernieuwen"
+
+msgid "No devices were returned for this account."
+msgstr "Er zijn geen apparaten gevonden voor dit account."
+
+msgid "No schema has been loaded yet. Select “Refresh schema” to read it from Salus."
+msgstr "Er is nog geen schema geladen. Kies ‘Schema vernieuwen’ om het bij Salus op te halen."
+
+msgid "This programme could not be decoded."
+msgstr "Dit programma kan niet worden gedecodeerd."
+
+msgid "No temperature changes are set for this day."
+msgstr "Voor deze dag zijn geen temperatuurwijzigingen ingesteld."
+
+msgid "Edit this heating zone"
+msgstr "Deze verwarmingszone bewerken"
+
+msgid "Change up to six time and temperature points per day. Leave both fields empty to remove a point. Saving submits the full weekly schedule for this zone."
+msgstr "Wijzig maximaal zes tijd- en temperatuurpunten per dag. Laat beide velden leeg om een punt te verwijderen. Bij het opslaan wordt het volledige weekschema voor deze zone verzonden."
+
+msgid "This zone contains an unsupported programme value and cannot be edited safely. Refresh the schema before trying again."
+msgstr "Deze zone bevat een niet-ondersteunde programmewaarde en kan niet veilig worden bewerkt. Vernieuw het schema voordat u het opnieuw probeert."
+
+#, php-format
+msgid "Point %d"
+msgstr "Punt %d"
+
+msgid "Time"
+msgstr "Tijd"
+
+msgid "Temperature"
+msgstr "Temperatuur"
+
+msgid "Save zone schedule"
+msgstr "Zoneschema opslaan"
+
+msgid "You are not allowed to refresh the heating schema."
+msgstr "U hebt geen toestemming om het verwarmingsschema te vernieuwen."
+
+msgid "Enter and save your Salus username and password in Settings > Salus iT500 first."
+msgstr "Voer eerst uw Salus-gebruikersnaam en -wachtwoord in bij Instellingen > Salus iT500 en sla deze op."
+
+msgid "Could not read the Salus device list."
+msgstr "De apparatenlijst van Salus kon niet worden gelezen."
+
+msgid "Heating zone 1"
+msgstr "Verwarmingszone 1"
+
+msgid "Heating zone 2"
+msgstr "Verwarmingszone 2"
+
+msgid "Monday"
+msgstr "Maandag"
+
+msgid "Tuesday"
+msgstr "Dinsdag"
+
+msgid "Wednesday"
+msgstr "Woensdag"
+
+msgid "Thursday"
+msgstr "Donderdag"
+
+msgid "Friday"
+msgstr "Vrijdag"
+
+msgid "Saturday"
+msgstr "Zaterdag"
+
+msgid "Sunday"
+msgstr "Zondag"
+
+msgid "Heating schema refreshed from Salus."
+msgstr "Verwarmingsschema opgehaald bij Salus."
+
+msgid "You are not allowed to update heating schedules."
+msgstr "U hebt geen toestemming om verwarmingsschema's bij te werken."
+
+msgid "The selected heating zone is no longer available. Refresh the schema and try again."
+msgstr "De geselecteerde verwarmingszone is niet meer beschikbaar. Vernieuw het schema en probeer het opnieuw."
+
+#, php-format
+msgid "The schedule update stopped: %s. Earlier batches may already have been applied; refresh the schema to check the device."
+msgstr "De schema-update is gestopt: %s. Eerdere batches zijn mogelijk al toegepast; vernieuw het schema om de status van het apparaat te controleren."
+
+#, php-format
+msgid "The schedule update response could not be verified: %s. Earlier batches may already have been applied; refresh the schema to check the device."
+msgstr "Het antwoord op de schema-update kon niet worden gecontroleerd: %s. Eerdere batches zijn mogelijk al toegepast; vernieuw het schema om de status van het apparaat te controleren."
+
+msgid "Salus rejected a schedule update. Earlier batches may already have been applied; refresh the schema to check the device."
+msgstr "Salus heeft een schema-update geweigerd. Eerdere batches zijn mogelijk al toegepast; vernieuw het schema om de status van het apparaat te controleren."
+
+msgid "Heating schedule saved for this zone."
+msgstr "Het verwarmingsschema voor deze zone is opgeslagen."
+
+msgid "You are not allowed to test this connection."
+msgstr "U hebt geen toestemming om deze verbinding te testen."
+
+msgid "Enter and save both a username and password before testing."
+msgstr "Voer een gebruikersnaam en wachtwoord in en sla deze op voordat u de test uitvoert."
+
+msgid "Authentication succeeded. The session token was not saved."
+msgstr "De authenticatie is geslaagd. Het sessietoken is niet opgeslagen."
+
+#, php-format
+msgid "The Salus API returned HTTP %d during authentication."
+msgstr "De Salus-API heeft tijdens de authenticatie HTTP-status %d geretourneerd."
+
+msgid "The response did not include the expected authentication details. Check the credentials and API compatibility."
+msgstr "Het antwoord bevatte niet de verwachte authenticatiegegevens. Controleer de inloggegevens en de compatibiliteit van de API."
+
+#, php-format
+msgid "The Salus API returned HTTP %d while reading the heating schema."
+msgstr "De Salus-API heeft bij het ophalen van het verwarmingsschema HTTP-status %d geretourneerd."
+
+#, php-format
+msgid "The Salus API returned HTTP %d while updating the heating schedule."
+msgstr "De Salus-API heeft bij het bijwerken van het verwarmingsschema HTTP-status %d geretourneerd."
+
+msgid "This zone contains an unsupported programme value. Refresh the schema before editing it."
+msgstr "Deze zone bevat een niet-ondersteunde programmewaarde. Vernieuw het schema voordat u het bewerkt."
+
+msgid "The submitted schedule does not match the loaded zone. Refresh the schema and try again."
+msgstr "Het verzonden schema komt niet overeen met de geladen zone. Vernieuw het schema en probeer het opnieuw."
+
+msgid "A day in the submitted schedule has an invalid format."
+msgstr "Een dag in het verzonden schema heeft een ongeldige indeling."
+
+msgid "Enter a valid time and a temperature from 0 to 50 for every schedule point."
+msgstr "Voer voor elk schemapunt een geldige tijd en een temperatuur van 0 tot 50 in."
+
+msgid "Schedule times must be in ascending order and cannot repeat within a day."
+msgstr "Schematijden moeten oplopend zijn en mogen niet binnen één dag worden herhaald."
+
+msgid "A day can contain no more than six schedule points."
+msgstr "Een dag kan maximaal zes schemapunten bevatten."
+
+msgid "PHP SimpleXML is required to read Salus API responses."
+msgstr "PHP SimpleXML is vereist om antwoorden van de Salus-API te lezen."
+
+msgid "The Salus API returned invalid XML while reading the heating schema."
+msgstr "De Salus-API heeft ongeldige XML geretourneerd bij het ophalen van het verwarmingsschema."
+
+msgid "The Salus API response did not contain the expected schema data."
+msgstr "Het antwoord van de Salus-API bevatte niet de verwachte schemagegevens."
+
+msgid "Could not read device attributes from the Salus response."
+msgstr "De apparaatkenmerken konden niet uit het antwoord van Salus worden gelezen."
+
+msgid "The programme value has an unsupported format."
+msgstr "De programmewaarde heeft een niet-ondersteunde indeling."
+
+msgid "The programme contains characters that cannot be decoded."
+msgstr "Het programma bevat tekens die niet kunnen worden gedecodeerd."
+
+msgid "The programme contains an invalid time or temperature."
+msgstr "Het programma bevat een ongeldige tijd of temperatuur."

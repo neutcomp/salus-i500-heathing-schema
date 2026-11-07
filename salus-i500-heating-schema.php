@@ -6,6 +6,8 @@
  * Requires at least: 6.0
  * Requires PHP: 7.4
  * Author: Salus iT500 Heating Schema
+ * Text Domain: salus-i500-heating-schema
+ * Domain Path: /languages
  */
 
 if ( ! defined( 'ABSPATH' ) ) {
@@ -22,12 +24,21 @@ final class Salus_iT500_Heating_Schema {
 	const API_HOST           = 'https://sal-emea-p01-api.arrayent.com';
 
 	public static function init() {
+		add_action( 'init', array( __CLASS__, 'load_textdomain' ) );
 		add_action( 'admin_menu', array( __CLASS__, 'add_settings_page' ) );
 		add_action( 'admin_init', array( __CLASS__, 'register_settings' ) );
 		add_action( 'admin_enqueue_scripts', array( __CLASS__, 'enqueue_schema_styles' ) );
 		add_action( 'admin_post_' . self::TEST_ACTION, array( __CLASS__, 'test_connection' ) );
 		add_action( 'admin_post_' . self::SCHEMA_ACTION, array( __CLASS__, 'refresh_schema' ) );
 		add_action( 'admin_post_' . self::UPDATE_ACTION, array( __CLASS__, 'update_zone_schedule' ) );
+	}
+
+	public static function load_textdomain() {
+		load_plugin_textdomain(
+			'salus-i500-heating-schema',
+			false,
+			dirname( plugin_basename( __FILE__ ) ) . '/languages'
+		);
 	}
 
 	public static function add_settings_page() {

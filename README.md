@@ -15,3 +15,7 @@ The connection uses the unofficial authentication flow implemented by [`pyit500`
 Credentials are stored in the WordPress options database. Restrict WordPress administrator access and protect database backups accordingly. Saving a zone sends schedule changes to the Salus API; if a multi-request update fails partway through, refresh the schema to check the device's actual state. The displayed schema cache expires after five minutes. Temperatures are shown in the device's configured unit. Do not enter credentials for an account you are not authorized to use.
 
 Schedule points support times from 00:00 to 23:59 and temperatures from 0 to 50 in 0.1-degree increments. Up to six points can be set per day.
+
+## Translation
+
+The plugin includes a Dutch (Netherlands) translation. Set the WordPress site language to **Nederlands** to use it. Translation files are in the `languages` directory.
