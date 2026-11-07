@@ -83,7 +83,7 @@ final class Salus_iT500_Heating_Schema {
 		wp_enqueue_style( 'salus-i500-schema' );
 		wp_add_inline_style(
 			'salus-i500-schema',
-			'.salus-schema-intro{max-width:760px;color:#50575e}.salus-schema-loading{display:flex;align-items:center;gap:6px;margin-top:16px}.salus-schema-device{margin:28px 0 36px}.salus-schema-zone{margin:20px 0 28px}.salus-schema-days{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:12px;max-width:1100px}.salus-schema-day{background:#fff;border:1px solid #dcdcde;border-radius:6px;padding:14px 16px;box-shadow:0 1px 2px rgba(0,0,0,.04)}.salus-schema-day h4{margin:0 0 12px;font-size:14px}.salus-schema-slots{display:flex;flex-wrap:wrap;gap:8px}.salus-schema-slot{display:inline-flex;align-items:center;gap:8px;padding:7px 10px;background:#f0f6fc;border:1px solid #c5d9ed;border-radius:4px;color:#1d2327}.salus-schema-slot time{font-weight:600}.salus-schema-slot strong{color:#135e96}.salus-schema-empty{color:#646970;font-style:italic}.salus-schema-raw{margin-top:12px;color:#646970}.salus-schema-raw code{white-space:normal;overflow-wrap:anywhere}.salus-schema-warning{color:#b32d2e}.salus-schema-editor{margin-top:16px;padding:12px 16px;border:1px solid #c3c4c7;background:#fff;max-width:1100px}.salus-schema-editor summary{cursor:pointer;font-weight:600}.salus-schema-editor .salus-schema-days{margin-top:12px}.salus-schema-edit-row{display:flex;align-items:center;gap:8px;margin:6px 0}.salus-schema-edit-row label{display:flex;align-items:center;gap:4px}.salus-schema-edit-row input[type=time]{width:115px}.salus-schema-edit-row input[type=number]{width:90px}@media(max-width:600px){.salus-schema-days{grid-template-columns:1fr}.salus-schema-edit-row{flex-wrap:wrap}}'
+			'.salus-schema-intro{max-width:760px;color:#50575e}.salus-schema-loading{display:flex;align-items:center;gap:6px;margin-top:16px}.salus-schema-progress-overlay{position:fixed;inset:0;z-index:100000;display:flex;align-items:center;justify-content:center;background:rgba(255,255,255,.82)}.salus-schema-progress-message{display:flex;align-items:center;gap:8px;padding:16px 20px;background:#fff;border:1px solid #c3c4c7;border-radius:4px;box-shadow:0 2px 8px rgba(0,0,0,.15);font-size:14px}.salus-schema-device{margin:28px 0 36px}.salus-schema-zone{margin:20px 0 28px}.salus-schema-days{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:12px;max-width:1100px}.salus-schema-day{background:#fff;border:1px solid #dcdcde;border-radius:6px;padding:14px 16px;box-shadow:0 1px 2px rgba(0,0,0,.04)}.salus-schema-day h4{margin:0 0 12px;font-size:14px}.salus-schema-slots{display:flex;flex-wrap:wrap;gap:8px}.salus-schema-slot{display:inline-flex;align-items:center;gap:8px;padding:7px 10px;background:#f0f6fc;border:1px solid #c5d9ed;border-radius:4px;color:#1d2327}.salus-schema-slot time{font-weight:600}.salus-schema-slot strong{color:#135e96}.salus-schema-empty{color:#646970;font-style:italic}.salus-schema-raw{margin-top:12px;color:#646970}.salus-schema-raw code{white-space:normal;overflow-wrap:anywhere}.salus-schema-warning{color:#b32d2e}.salus-schema-editor{margin-top:16px;padding:12px 16px;border:1px solid #c3c4c7;background:#fff;max-width:1100px}.salus-schema-editor summary{cursor:pointer;font-weight:600}.salus-schema-editor .salus-schema-days{margin-top:12px}.salus-schema-edit-row{display:flex;align-items:center;gap:8px;margin:6px 0}.salus-schema-edit-row label{display:flex;align-items:center;gap:4px}.salus-schema-edit-row input[type=time]{width:115px}.salus-schema-edit-row input[type=number]{width:90px}@media(max-width:600px){.salus-schema-days{grid-template-columns:1fr}.salus-schema-edit-row{flex-wrap:wrap}}'
 		);
 
 		wp_register_script( 'salus-i500-schema', false, array(), '0.1.0', true );
@@ -96,6 +96,7 @@ final class Salus_iT500_Heating_Schema {
 				'action'    => self::AUTO_LOAD_ACTION,
 				'nonce'     => wp_create_nonce( self::AUTO_LOAD_ACTION ),
 				'loadError' => __( 'Could not load the heating schema. Use “Refresh schema” to try again.', 'salus-i500-heating-schema' ),
+				'savingMessage' => __( 'Saving the heating schedule… Please wait.', 'salus-i500-heating-schema' ),
 			)
 		);
 		wp_add_inline_script(
@@ -130,6 +131,34 @@ final class Salus_iT500_Heating_Schema {
 						error.textContent = exception.message || salusI500Schema.loadError;
 						error.hidden = false;
 					});
+				});
+
+				document.addEventListener("submit", function(event) {
+					var form = event.target;
+					if (!form.matches("form[data-salus-progress]")) {
+						return;
+					}
+					if (form.dataset.salusSubmitting === "true") {
+						event.preventDefault();
+						return;
+					}
+
+					form.dataset.salusSubmitting = "true";
+					var overlay = document.createElement("div");
+					overlay.className = "salus-schema-progress-overlay";
+					overlay.setAttribute("role", "status");
+					overlay.setAttribute("aria-live", "polite");
+					var message = document.createElement("div");
+					message.className = "salus-schema-progress-message";
+					var spinner = document.createElement("span");
+					spinner.className = "spinner is-active";
+					spinner.setAttribute("aria-hidden", "true");
+					var text = document.createElement("span");
+					text.textContent = salusI500Schema.savingMessage;
+					message.appendChild(spinner);
+					message.appendChild(text);
+					overlay.appendChild(message);
+					document.body.appendChild(overlay);
 				});
 			})();'
 		);
@@ -346,7 +375,7 @@ final class Salus_iT500_Heating_Schema {
 			<?php if ( $has_invalid_program ) : ?>
 				<p class="salus-schema-warning"><?php esc_html_e( 'This zone contains an unsupported programme value and cannot be edited safely. Refresh the schema before trying again.', 'salus-i500-heating-schema' ); ?></p>
 			<?php else : ?>
-				<form action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>" method="post">
+				<form action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>" method="post" data-salus-progress>
 					<input type="hidden" name="action" value="<?php echo esc_attr( self::UPDATE_ACTION ); ?>">
 					<input type="hidden" name="device_id" value="<?php echo esc_attr( $device['id'] ); ?>">
 					<input type="hidden" name="zone_prefix" value="<?php echo esc_attr( $zone['prefix'] ); ?>">

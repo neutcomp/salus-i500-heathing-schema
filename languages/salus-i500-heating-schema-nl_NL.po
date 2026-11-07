@@ -62,6 +62,9 @@ msgstr "Uw verwarmingsweek in één oogopslag. Elk tijdstip geeft aan wanneer de
 msgid "Refresh schema"
 msgstr "Schema vernieuwen"
 
+msgid "Saving the heating schedule… Please wait."
+msgstr "Verwarmingsschema opslaan… Een moment geduld."
+
 msgid "Could not load the heating schema. Use “Refresh schema” to try again."
 msgstr "Het verwarmingsschema kon niet worden opgehaald. Kies ‘Schema vernieuwen’ om het opnieuw te proberen."
 
