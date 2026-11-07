@@ -7,19 +7,19 @@ Stable tag: 0.1.0
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
-View Salus iT500 weekly heating programme values, configure account credentials, and test API authentication from the WordPress admin.
+View and edit Salus iT500 weekly heating programmes, configure account credentials, and test API authentication from the WordPress admin.
 
 == Description ==
 
 Salus iT500 Heating Schema adds a Heating schema > Schema admin screen and settings under Settings > Salus iT500. Enter your Salus account username and password, save them, and refresh the weekly programme values from your iT500.
 
-The schema screen decodes programme values for each available heating zone from Monday to Sunday into readable time and target-temperature changes. The original device value is available under each day for troubleshooting. Temperatures are shown in the device's configured unit.
+The schema screen decodes programme values for each available heating zone from Monday to Sunday into readable time and target-temperature changes. Edit and submit the weekly programme one heating zone at a time. Temperatures are shown in the device's configured unit.
 
 The connection uses the unofficial iT500 authentication flow implemented by pyit500. The API requires an MD5 password digest in the login request. This is compatibility behavior for that protocol, not a recommended password-storage method. TLS certificate verification remains enabled.
 
 The plugin stores credentials in the WordPress options database. Restrict administrator access and protect database backups accordingly. Only connect to accounts and devices you are authorized to use.
 
-The schema is a standalone admin page and is read-only. This plugin does not change heating settings. Retrieved schema data is cached for up to five minutes.
+The schema is a standalone admin page. Saving a zone sends schedule changes to the Salus API. If a multi-request update fails partway through, refresh the schema to check the device's actual state. Retrieved schema data is cached for up to five minutes.
 
 == Installation ==
 
@@ -29,6 +29,7 @@ The schema is a standalone admin page and is read-only. This plugin does not cha
 4. Enter your account username and password, then select **Save credentials**.
 5. Select **Test connection** under Settings > Salus iT500 to check authentication.
 6. Open Heating schema > Schema and select **Refresh schema** to load weekly programme values.
+7. Expand **Edit this heating zone** to change times or temperatures, then select **Save zone schedule**. Each zone is submitted separately.
 
 == Frequently Asked Questions ==
 
@@ -39,6 +40,10 @@ No. It requests an authentication session only.
 = Does refreshing the schema change heating settings? =
 
 No. It reads device and programme attributes only.
+
+= Can I edit schedules? =
+
+Yes. Expand the editor for a heating zone, change up to six time and temperature points per day, and save that zone's weekly schedule. Refresh the schema after any failed update to check the device's actual state.
 
 = Is the session token stored? =
 
@@ -55,7 +60,7 @@ No. The authentication flow is based on the public, unofficial pyit500 library a
 == Changelog ==
 
 = 0.1.0 =
-* Add account credential settings, an authentication-only connection test, and a read-only weekly schema view.
+* Add account credential settings, an authentication-only connection test, a weekly schema view, and per-zone schedule editing.
 
 == Upgrade Notice ==
 

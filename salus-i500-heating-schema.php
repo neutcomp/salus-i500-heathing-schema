@@ -1,7 +1,7 @@
 <?php
 /**
  * Plugin Name: Salus iT500 Heating Schema
- * Description: View Salus iT500 weekly heating programme values.
+ * Description: View and edit Salus iT500 weekly heating programmes.
  * Version: 0.1.0
  * Requires at least: 6.0
  * Requires PHP: 7.4
@@ -18,6 +18,7 @@ final class Salus_iT500_Heating_Schema {
 	const SETTINGS_PAGE_SLUG = 'salus-i500-settings';
 	const TEST_ACTION        = 'salus_i500_test_connection';
 	const SCHEMA_ACTION      = 'salus_i500_refresh_schema';
+	const UPDATE_ACTION      = 'salus_i500_update_zone_schedule';
 	const API_HOST           = 'https://sal-emea-p01-api.arrayent.com';
 
 	public static function init() {
@@ -26,6 +27,7 @@ final class Salus_iT500_Heating_Schema {
 		add_action( 'admin_enqueue_scripts', array( __CLASS__, 'enqueue_schema_styles' ) );
 		add_action( 'admin_post_' . self::TEST_ACTION, array( __CLASS__, 'test_connection' ) );
 		add_action( 'admin_post_' . self::SCHEMA_ACTION, array( __CLASS__, 'refresh_schema' ) );
+		add_action( 'admin_post_' . self::UPDATE_ACTION, array( __CLASS__, 'update_zone_schedule' ) );
 	}
 
 	public static function add_settings_page() {
@@ -68,7 +70,7 @@ final class Salus_iT500_Heating_Schema {
 		wp_enqueue_style( 'salus-i500-schema' );
 		wp_add_inline_style(
 			'salus-i500-schema',
-			'.salus-schema-intro{max-width:760px;color:#50575e}.salus-schema-device{margin:28px 0 36px}.salus-schema-zone{margin:20px 0 28px}.salus-schema-days{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:12px;max-width:1100px}.salus-schema-day{background:#fff;border:1px solid #dcdcde;border-radius:6px;padding:14px 16px;box-shadow:0 1px 2px rgba(0,0,0,.04)}.salus-schema-day h4{margin:0 0 12px;font-size:14px}.salus-schema-slots{display:flex;flex-wrap:wrap;gap:8px}.salus-schema-slot{display:inline-flex;align-items:center;gap:8px;padding:7px 10px;background:#f0f6fc;border:1px solid #c5d9ed;border-radius:4px;color:#1d2327}.salus-schema-slot time{font-weight:600}.salus-schema-slot strong{color:#135e96}.salus-schema-empty{color:#646970;font-style:italic}.salus-schema-raw{margin-top:12px;color:#646970}.salus-schema-raw code{white-space:normal;overflow-wrap:anywhere}.salus-schema-warning{color:#b32d2e}@media(max-width:600px){.salus-schema-days{grid-template-columns:1fr}}'
+			'.salus-schema-intro{max-width:760px;color:#50575e}.salus-schema-device{margin:28px 0 36px}.salus-schema-zone{margin:20px 0 28px}.salus-schema-days{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:12px;max-width:1100px}.salus-schema-day{background:#fff;border:1px solid #dcdcde;border-radius:6px;padding:14px 16px;box-shadow:0 1px 2px rgba(0,0,0,.04)}.salus-schema-day h4{margin:0 0 12px;font-size:14px}.salus-schema-slots{display:flex;flex-wrap:wrap;gap:8px}.salus-schema-slot{display:inline-flex;align-items:center;gap:8px;padding:7px 10px;background:#f0f6fc;border:1px solid #c5d9ed;border-radius:4px;color:#1d2327}.salus-schema-slot time{font-weight:600}.salus-schema-slot strong{color:#135e96}.salus-schema-empty{color:#646970;font-style:italic}.salus-schema-raw{margin-top:12px;color:#646970}.salus-schema-raw code{white-space:normal;overflow-wrap:anywhere}.salus-schema-warning{color:#b32d2e}.salus-schema-editor{margin-top:16px;padding:12px 16px;border:1px solid #c3c4c7;background:#fff;max-width:1100px}.salus-schema-editor summary{cursor:pointer;font-weight:600}.salus-schema-editor .salus-schema-days{margin-top:12px}.salus-schema-edit-row{display:flex;align-items:center;gap:8px;margin:6px 0}.salus-schema-edit-row label{display:flex;align-items:center;gap:4px}.salus-schema-edit-row input[type=time]{width:115px}.salus-schema-edit-row input[type=number]{width:90px}@media(max-width:600px){.salus-schema-days{grid-template-columns:1fr}.salus-schema-edit-row{flex-wrap:wrap}}'
 		);
 	}
 
@@ -194,7 +196,7 @@ final class Salus_iT500_Heating_Schema {
 		?>
 		<div class="wrap">
 			<h1><?php esc_html_e( 'Heating schema', 'salus-i500-heating-schema' ); ?></h1>
-			<p class="salus-schema-intro"><?php esc_html_e( 'Your heating week at a glance. Each time shows when the target temperature changes; it remains in effect until the next listed time. Temperatures use the unit configured on your thermostat. This page is read-only.', 'salus-i500-heating-schema' ); ?></p>
+			<p class="salus-schema-intro"><?php esc_html_e( 'Your heating week at a glance. Each time shows when the target temperature changes; it remains in effect until the next listed time. Temperatures use the unit configured on your thermostat. Edit and save schedules one heating zone at a time.', 'salus-i500-heating-schema' ); ?></p>
 			<?php self::render_connection_notice(); ?>
 			<form action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>" method="post">
 				<input type="hidden" name="action" value="<?php echo esc_attr( self::SCHEMA_ACTION ); ?>">
@@ -248,11 +250,62 @@ final class Salus_iT500_Heating_Schema {
 						</article>
 					<?php endforeach; ?>
 				</div>
+				<?php self::render_zone_editor( $device, $zone ); ?>
 			</section>
 			<?php
 		}
 		?>
 		</section>
+		<?php
+	}
+
+	private static function render_zone_editor( $device, $zone ) {
+		$has_invalid_program = false;
+		foreach ( $zone['days'] as $day ) {
+			if ( ! self::is_editable_heating_program( $day['value'] ) ) {
+				$has_invalid_program = true;
+				break;
+			}
+		}
+		?>
+		<details class="salus-schema-editor">
+			<summary><?php esc_html_e( 'Edit this heating zone', 'salus-i500-heating-schema' ); ?></summary>
+			<p><?php esc_html_e( 'Change up to six time and temperature points per day. Leave both fields empty to remove a point. Saving submits the full weekly schedule for this zone.', 'salus-i500-heating-schema' ); ?></p>
+			<?php if ( $has_invalid_program ) : ?>
+				<p class="salus-schema-warning"><?php esc_html_e( 'This zone contains an unsupported programme value and cannot be edited safely. Refresh the schema before trying again.', 'salus-i500-heating-schema' ); ?></p>
+			<?php else : ?>
+				<form action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>" method="post">
+					<input type="hidden" name="action" value="<?php echo esc_attr( self::UPDATE_ACTION ); ?>">
+					<input type="hidden" name="device_id" value="<?php echo esc_attr( $device['id'] ); ?>">
+					<input type="hidden" name="zone_prefix" value="<?php echo esc_attr( $zone['prefix'] ); ?>">
+					<?php wp_nonce_field( self::UPDATE_ACTION ); ?>
+					<div class="salus-schema-days">
+						<?php foreach ( $zone['days'] as $day ) : ?>
+							<?php $slots = self::decode_heating_program( $day['value'] ); ?>
+							<article class="salus-schema-day">
+								<h4><?php echo esc_html( $day['name'] ); ?></h4>
+								<?php for ( $slot_index = 0; $slot_index < 6; $slot_index++ ) : ?>
+									<?php $slot = isset( $slots[ $slot_index ] ) ? $slots[ $slot_index ] : array( 'time' => '', 'temperature' => '' ); ?>
+									<div class="salus-schema-edit-row">
+										<span><?php echo esc_html( sprintf( /* translators: %d is the schedule point number. */ __( 'Point %d', 'salus-i500-heating-schema' ), $slot_index + 1 ) ); ?></span>
+										<label>
+											<span class="screen-reader-text"><?php esc_html_e( 'Time', 'salus-i500-heating-schema' ); ?></span>
+											<input type="time" name="programs[<?php echo esc_attr( $day['attribute'] ); ?>][<?php echo esc_attr( $slot_index ); ?>][time]" value="<?php echo esc_attr( $slot['time'] ); ?>">
+										</label>
+										<label>
+											<span class="screen-reader-text"><?php esc_html_e( 'Temperature', 'salus-i500-heating-schema' ); ?></span>
+											<input type="number" min="0" max="50" step="0.1" name="programs[<?php echo esc_attr( $day['attribute'] ); ?>][<?php echo esc_attr( $slot_index ); ?>][temperature]" value="<?php echo esc_attr( $slot['temperature'] ); ?>" placeholder="<?php esc_attr_e( 'Temperature', 'salus-i500-heating-schema' ); ?>">
+											<span aria-hidden="true">&deg;</span>
+										</label>
+									</div>
+								<?php endfor; ?>
+							</article>
+						<?php endforeach; ?>
+					</div>
+					<?php submit_button( __( 'Save zone schedule', 'salus-i500-heating-schema' ) ); ?>
+				</form>
+			<?php endif; ?>
+		</details>
 		<?php
 	}
 
@@ -351,22 +404,25 @@ final class Salus_iT500_Heating_Schema {
 						continue;
 					}
 					$days[] = array(
-						'name'  => $day_name,
-						'value' => $attributes[ $attribute_name ],
+						'name'      => $day_name,
+						'attribute' => $attribute_name,
+						'value'     => $attributes[ $attribute_name ],
 					);
 				}
 
 				if ( ! empty( $days ) ) {
 					$zones[] = array(
-						'name' => $zone_name,
-						'days' => $days,
+						'name'   => $zone_name,
+						'prefix' => $prefix,
+						'days'   => $days,
 					);
 				}
 			}
 
 			$devices[] = array(
-				'name'  => self::xml_child_value( $device_node, 'devName' ),
-				'zones' => $zones,
+				'id'     => $device_id,
+				'name'   => self::xml_child_value( $device_node, 'devName' ),
+				'zones'  => $zones,
 			);
 		}
 
@@ -376,6 +432,130 @@ final class Salus_iT500_Heating_Schema {
 			5 * MINUTE_IN_SECONDS
 		);
 		self::store_connection_result( 'success', __( 'Heating schema refreshed from Salus.', 'salus-i500-heating-schema' ) );
+		self::redirect_to_schema();
+	}
+
+	public static function update_zone_schedule() {
+		if ( ! current_user_can( 'manage_options' ) ) {
+			wp_die( esc_html__( 'You are not allowed to update heating schedules.', 'salus-i500-heating-schema' ) );
+		}
+		check_admin_referer( self::UPDATE_ACTION );
+
+		$device_id  = isset( $_POST['device_id'] ) ? sanitize_text_field( wp_unslash( $_POST['device_id'] ) ) : '';
+		$zone_prefix = isset( $_POST['zone_prefix'] ) ? sanitize_text_field( wp_unslash( $_POST['zone_prefix'] ) ) : '';
+		$schema      = get_transient( self::schema_cache_key() );
+		$zone        = null;
+		$device      = null;
+
+		if ( is_array( $schema ) && ! empty( $schema['devices'] ) ) {
+			foreach ( $schema['devices'] as $candidate_device ) {
+				if ( ! isset( $candidate_device['id'] ) || (string) $candidate_device['id'] !== $device_id ) {
+					continue;
+				}
+				foreach ( $candidate_device['zones'] as $candidate_zone ) {
+					if ( isset( $candidate_zone['prefix'] ) && $candidate_zone['prefix'] === $zone_prefix ) {
+						$device = $candidate_device;
+						$zone   = $candidate_zone;
+						break 2;
+					}
+				}
+			}
+		}
+
+		if ( null === $zone || ! in_array( $zone_prefix, array( 'A', 'B' ), true ) ) {
+			self::store_connection_result( 'error', __( 'The selected heating zone is no longer available. Refresh the schema and try again.', 'salus-i500-heating-schema' ) );
+			self::redirect_to_schema();
+		}
+
+		$programs = isset( $_POST['programs'] ) && is_array( $_POST['programs'] ) ? wp_unslash( $_POST['programs'] ) : array();
+		$values   = self::validate_zone_programs( $programs, $zone );
+		if ( is_wp_error( $values ) ) {
+			self::store_connection_result( 'error', $values->get_error_message() );
+			self::redirect_to_schema();
+		}
+
+		$credentials = self::get_credentials();
+		if ( '' === $credentials['username'] || '' === $credentials['password'] ) {
+			self::store_connection_result( 'error', __( 'Enter and save your Salus username and password in Settings > Salus iT500 first.', 'salus-i500-heating-schema' ) );
+			self::redirect_to_schema();
+		}
+
+		$auth = self::authenticate( $credentials );
+		if ( is_wp_error( $auth ) ) {
+			self::store_connection_result( 'error', $auth->get_error_message() );
+			self::redirect_to_schema();
+		}
+
+		foreach ( array_chunk( $values, 3, true ) as $batch ) {
+			$request = array(
+				'userId'   => $auth['userId'],
+				'secToken' => $auth['securityToken'],
+				'devId'    => $device['id'],
+			);
+			$index   = 1;
+			foreach ( $batch as $attribute_name => $attribute_value ) {
+				$request[ 'name' . $index ]  = $attribute_name;
+				$request[ 'value' . $index ] = $attribute_value;
+				++$index;
+			}
+
+			$response = self::api_get( 'setMultiDeviceAttributes2', $request );
+			if ( is_wp_error( $response ) ) {
+				self::store_connection_result(
+					'error',
+					sprintf(
+						/* translators: %s is the error returned by the Salus API. */
+						__( 'The schedule update stopped: %s. Earlier batches may already have been applied; refresh the schema to check the device.', 'salus-i500-heating-schema' ),
+						$response->get_error_message()
+					)
+				);
+				self::redirect_to_schema();
+			}
+
+			$response_xml = self::parse_api_xml( $response, 'setMultiDeviceAttributes2Response' );
+			if ( is_wp_error( $response_xml ) ) {
+				self::store_connection_result(
+					'error',
+					sprintf(
+						/* translators: %s is the error returned by the Salus API. */
+						__( 'The schedule update response could not be verified: %s. Earlier batches may already have been applied; refresh the schema to check the device.', 'salus-i500-heating-schema' ),
+						$response_xml->get_error_message()
+					)
+				);
+				self::redirect_to_schema();
+			}
+
+			$return_code = self::xml_child_value( $response_xml, 'retCode' );
+			if ( ! ctype_digit( $return_code ) || '0' !== $return_code ) {
+				self::store_connection_result(
+					'error',
+					__( 'Salus rejected a schedule update. Earlier batches may already have been applied; refresh the schema to check the device.', 'salus-i500-heating-schema' )
+				);
+				self::redirect_to_schema();
+			}
+		}
+
+		foreach ( $schema['devices'] as &$cached_device ) {
+			if ( (string) $cached_device['id'] !== $device_id ) {
+				continue;
+			}
+			foreach ( $cached_device['zones'] as &$cached_zone ) {
+				if ( $cached_zone['prefix'] !== $zone_prefix ) {
+					continue;
+				}
+				foreach ( $cached_zone['days'] as &$day ) {
+					if ( isset( $values[ $day['attribute'] ] ) ) {
+						$day['value'] = $values[ $day['attribute'] ];
+					}
+				}
+				unset( $day );
+			}
+			unset( $cached_zone );
+		}
+		unset( $cached_device );
+		set_transient( self::schema_cache_key(), $schema, 5 * MINUTE_IN_SECONDS );
+
+		self::store_connection_result( 'success', __( 'Heating schedule saved for this zone.', 'salus-i500-heating-schema' ) );
 		self::redirect_to_schema();
 	}
 
@@ -477,6 +657,117 @@ final class Salus_iT500_Heating_Schema {
 		}
 
 		return wp_remote_retrieve_body( $response );
+	}
+
+	private static function api_get( $path, $data ) {
+		$response = wp_remote_get(
+			add_query_arg( $data, self::API_HOST . '/zdk/services/zamapi/' . $path ),
+			array(
+				'timeout'   => 15,
+				'sslverify' => true,
+				'headers'   => array( 'Accept' => 'application/xml, text/xml' ),
+			)
+		);
+
+		if ( is_wp_error( $response ) ) {
+			return new WP_Error( 'salus_api_request_failed', $response->get_error_message() );
+		}
+
+		$status = wp_remote_retrieve_response_code( $response );
+		if ( $status < 200 || $status >= 300 ) {
+			return new WP_Error(
+				'salus_api_http_error',
+				sprintf(
+					/* translators: %d is the HTTP status code returned by the Salus API. */
+					__( 'The Salus API returned HTTP %d while updating the heating schedule.', 'salus-i500-heating-schema' ),
+					(int) $status
+				)
+			);
+		}
+
+		return wp_remote_retrieve_body( $response );
+	}
+
+	private static function validate_zone_programs( $programs, $zone ) {
+		$expected_attributes = array();
+		foreach ( $zone['days'] as $day ) {
+			$expected_attributes[] = $day['attribute'];
+			if ( ! self::is_editable_heating_program( $day['value'] ) ) {
+				return new WP_Error( 'salus_schedule_not_editable', __( 'This zone contains an unsupported programme value. Refresh the schema before editing it.', 'salus-i500-heating-schema' ) );
+			}
+		}
+
+		if ( array_diff( array_keys( $programs ), $expected_attributes ) || array_diff( $expected_attributes, array_keys( $programs ) ) ) {
+			return new WP_Error( 'salus_schedule_invalid_days', __( 'The submitted schedule does not match the loaded zone. Refresh the schema and try again.', 'salus-i500-heating-schema' ) );
+		}
+
+		$values = array();
+		foreach ( $zone['days'] as $day ) {
+			$submitted_slots = $programs[ $day['attribute'] ];
+			if ( ! is_array( $submitted_slots ) ) {
+				return new WP_Error( 'salus_schedule_invalid_day', __( 'A day in the submitted schedule has an invalid format.', 'salus-i500-heating-schema' ) );
+			}
+			if ( array_diff( array_keys( $submitted_slots ), range( 0, 5 ) ) ) {
+				return new WP_Error( 'salus_schedule_invalid_slots', __( 'A day in the submitted schedule has an invalid format.', 'salus-i500-heating-schema' ) );
+			}
+
+			$slots     = array();
+			$last_time = '';
+			for ( $slot_index = 0; $slot_index < 6; $slot_index++ ) {
+				$slot = isset( $submitted_slots[ $slot_index ] ) && is_array( $submitted_slots[ $slot_index ] ) ? $submitted_slots[ $slot_index ] : array();
+				$time = isset( $slot['time'] ) && is_scalar( $slot['time'] ) ? sanitize_text_field( (string) $slot['time'] ) : '';
+				$temp = isset( $slot['temperature'] ) && is_scalar( $slot['temperature'] ) ? sanitize_text_field( (string) $slot['temperature'] ) : '';
+
+				if ( '' === $time && '' === $temp ) {
+					continue;
+				}
+				if ( ! preg_match( '/^(?:[01][0-9]|2[0-3]):[0-5][0-9]$/', $time ) || ! preg_match( '/^(?:[0-9]|[1-4][0-9]|50)(?:\.[0-9])?$/', $temp ) ) {
+					return new WP_Error( 'salus_schedule_invalid_value', __( 'Enter a valid time and a temperature from 0 to 50 for every schedule point.', 'salus-i500-heating-schema' ) );
+				}
+				if ( '' !== $last_time && strcmp( $time, $last_time ) <= 0 ) {
+					return new WP_Error( 'salus_schedule_time_order', __( 'Schedule times must be in ascending order and cannot repeat within a day.', 'salus-i500-heating-schema' ) );
+				}
+
+				$slots[]  = array(
+					'time'        => $time,
+					'temperature' => (int) round( (float) $temp * 10 ),
+				);
+				$last_time = $time;
+			}
+
+			if ( count( $submitted_slots ) > 6 ) {
+				return new WP_Error( 'salus_schedule_too_many_points', __( 'A day can contain no more than six schedule points.', 'salus-i500-heating-schema' ) );
+			}
+			$values[ $day['attribute'] ] = self::encode_heating_program( $slots );
+		}
+
+		return $values;
+	}
+
+	private static function is_editable_heating_program( $program ) {
+		$slots = self::decode_heating_program( $program );
+		return ! is_wp_error( $slots )
+			&& count( $slots ) <= 6
+			&& strlen( trim( (string) $program ) ) <= 24;
+	}
+
+	private static function encode_heating_program( $slots ) {
+		$program = '';
+		foreach ( $slots as $slot ) {
+			$time_parts = explode( ':', $slot['time'] );
+			$degrees    = $slot['temperature'];
+			$values     = array(
+				(int) $time_parts[0],
+				(int) $time_parts[1],
+				(int) floor( $degrees / 10 ),
+				$degrees % 10,
+			);
+			foreach ( $values as $value ) {
+				$program .= chr( $value + 48 );
+			}
+		}
+
+		return str_pad( $program, 24, '0', STR_PAD_RIGHT );
 	}
 
 	private static function parse_api_xml( $body, $expected_response ) {
