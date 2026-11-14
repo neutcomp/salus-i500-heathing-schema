@@ -13,6 +13,10 @@ Users with the WordPress **Editor** role (**Redacteur**) can update heating sche
 
 When another user has the schema page open, a notice appears recommending that you coordinate before saving. Presence updates run every 30 seconds and expire after 75 seconds without a response; this is a heads-up, not an edit lock.
 
+## Team Reminder for Clubs integration
+
+When [Team Reminder for Clubs](https://wordpress.org/plugins/team-reminder-for-clubs/) is active, enable its integration under **Settings → Salus iT500**. On the schema page, a heating period is highlighted red when a reminder today or in the future falls during that period and its target is 14°C or lower. Hover over the highlighted period for an explanation. Reminders without a time and past reminders are ignored.
+
 The connection uses the unofficial authentication flow implemented by [`pyit500`](https://github.com/RichyA/pyit500): HTTPS to the Arrayent Salus service and an MD5 password digest in the JSON login request. The digest is compatibility behavior required by that protocol, not a recommended password-storage mechanism. TLS certificate verification remains enabled.
 
 Credentials are stored in the WordPress options database. Restrict WordPress administrator access and protect database backups accordingly. Saving a zone sends schedule changes to the Salus API; if a multi-request update fails partway through, refresh the schema to check the device's actual state. The displayed schema cache expires after five minutes. Temperatures are shown in the device's configured unit. Do not enter credentials for an account you are not authorized to use.

@@ -47,6 +47,21 @@ msgstr "Opgeslagen wachtwoord wissen"
 msgid "Save credentials"
 msgstr "Inloggegevens opslaan"
 
+msgid "Save settings"
+msgstr "Instellingen opslaan"
+
+msgid "Reminder integration"
+msgstr "Integratie met herinneringen"
+
+msgid "Enable integration with Team Reminder for Clubs"
+msgstr "Integratie met Team Reminder for Clubs inschakelen"
+
+msgid "Highlight schedule periods in red when a timed reminder falls within them and the heating target is 14°C or lower. Past reminders and reminders without a time are ignored."
+msgstr "Markeer verwarmingsperioden rood wanneer een herinnering met een tijd binnen die periode valt en de ingestelde temperatuur 14°C of lager is. Herinneringen uit het verleden en herinneringen zonder tijd worden genegeerd."
+
+msgid "A reminder is set, but the heating is not set higher than 14°C."
+msgstr "Er is een herinnering ingesteld, maar de verwarming staat niet hoger dan 14°C."
+
 msgid "Connection test"
 msgstr "Verbindingstest"
 

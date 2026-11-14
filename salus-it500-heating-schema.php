@@ -90,7 +90,7 @@ final class Salus_iT500_Heating_Schema {
 		wp_enqueue_style( 'salus-i500-schema' );
 		wp_add_inline_style(
 			'salus-i500-schema',
-			'.salus-schema-intro{max-width:760px;color:#50575e}.salus-schema-presence{max-width:760px}.salus-schema-loading{display:flex;align-items:center;gap:6px;margin-top:16px}.salus-schema-progress-overlay{position:fixed;inset:0;z-index:100000;display:flex;align-items:center;justify-content:center;background:rgba(255,255,255,.82)}.salus-schema-progress-message{display:flex;align-items:center;gap:8px;padding:16px 20px;background:#fff;border:1px solid #c3c4c7;border-radius:4px;box-shadow:0 2px 8px rgba(0,0,0,.15);font-size:14px}.salus-schema-device{margin:28px 0 36px}.salus-schema-zone{margin:20px 0 28px}.salus-schema-days{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:12px;max-width:1100px}.salus-schema-day{background:#fff;border:1px solid #dcdcde;border-radius:6px;padding:14px 16px;box-shadow:0 1px 2px rgba(0,0,0,.04)}.salus-schema-day h4{margin:0 0 12px;font-size:14px}.salus-schema-raw{margin-top:12px;color:#646970}.salus-schema-raw code{white-space:normal;overflow-wrap:anywhere}.salus-schema-warning{color:#b32d2e}.salus-schema-editor{margin-top:16px;padding:12px 16px;border:1px solid #c3c4c7;background:#fff;max-width:1100px}.salus-schema-editor summary{cursor:pointer;font-weight:600}.salus-schema-editor .salus-schema-days{margin-top:12px}.salus-schema-edit-row{display:flex;align-items:center;gap:8px;margin:6px 0}.salus-schema-edit-row label{display:flex;align-items:center;gap:4px}.salus-schema-edit-row input[type=time]{width:115px}.salus-schema-edit-row input[type=number]{width:90px}@media(max-width:600px){.salus-schema-days{grid-template-columns:1fr}.salus-schema-edit-row{flex-wrap:wrap}}'
+			'.salus-schema-intro{max-width:760px;color:#50575e}.salus-schema-presence{max-width:760px}.salus-schema-loading{display:flex;align-items:center;gap:6px;margin-top:16px}.salus-schema-progress-overlay{position:fixed;inset:0;z-index:100000;display:flex;align-items:center;justify-content:center;background:rgba(255,255,255,.82)}.salus-schema-progress-message{display:flex;align-items:center;gap:8px;padding:16px 20px;background:#fff;border:1px solid #c3c4c7;border-radius:4px;box-shadow:0 2px 8px rgba(0,0,0,.15);font-size:14px}.salus-schema-device{margin:28px 0 36px}.salus-schema-zone{margin:20px 0 28px}.salus-schema-days{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:12px;max-width:1100px}.salus-schema-day{background:#fff;border:1px solid #dcdcde;border-radius:6px;padding:14px 16px;box-shadow:0 1px 2px rgba(0,0,0,.04)}.salus-schema-day h4{margin:0 0 12px;font-size:14px}.salus-schema-raw{margin-top:12px;color:#646970}.salus-schema-raw code{white-space:normal;overflow-wrap:anywhere}.salus-schema-warning{color:#b32d2e}.salus-schema-editor{margin-top:16px;padding:12px 16px;border:1px solid #c3c4c7;background:#fff;max-width:1100px}.salus-schema-editor summary{cursor:pointer;font-weight:600}.salus-schema-editor .salus-schema-days{margin-top:12px}.salus-schema-edit-row{display:flex;align-items:center;gap:8px;margin:6px 0}.salus-schema-reminder-warning{background:#fcf0f1;border-left:4px solid #d63638;padding:4px 8px;color:#8a2424}.salus-schema-edit-row label{display:flex;align-items:center;gap:4px}.salus-schema-edit-row input[type=time]{width:115px}.salus-schema-edit-row input[type=number]{width:90px}@media(max-width:600px){.salus-schema-days{grid-template-columns:1fr}.salus-schema-edit-row{flex-wrap:wrap}}'
 		);
 
 		wp_register_script( 'salus-i500-schema', false, array(), '0.1.0', true );
@@ -255,6 +255,16 @@ final class Salus_iT500_Heating_Schema {
 			self::SETTINGS_PAGE_SLUG,
 			'salus_i500_account'
 		);
+
+		if ( self::is_reminder_plugin_active() ) {
+			add_settings_field(
+				'salus_i500_reminder_integration',
+				__( 'Reminder integration', 'salus-it500-heating-schema' ),
+				array( __CLASS__, 'render_reminder_integration_field' ),
+				self::SETTINGS_PAGE_SLUG,
+				'salus_i500_account'
+			);
+		}
 	}
 
 	public static function sanitize_credentials( $input ) {
@@ -273,9 +283,15 @@ final class Salus_iT500_Heating_Schema {
 			$password = (string) $old['password'];
 		}
 
+		$reminder_integration = isset( $old['reminder_integration'] ) && '1' === (string) $old['reminder_integration'];
+		if ( array_key_exists( 'reminder_integration', $input ) ) {
+			$reminder_integration = '1' === (string) $input['reminder_integration'];
+		}
+
 		return array(
-			'username' => isset( $input['username'] ) ? sanitize_text_field( $input['username'] ) : '',
-			'password' => $password,
+			'username'             => isset( $input['username'] ) ? sanitize_text_field( $input['username'] ) : '',
+			'password'             => $password,
+			'reminder_integration' => $reminder_integration ? '1' : '0',
 		);
 	}
 
@@ -312,6 +328,22 @@ final class Salus_iT500_Heating_Schema {
 <?php
 	}
 
+	public static function render_reminder_integration_field() {
+		$options = get_option( self::OPTION_NAME, array() );
+		$enabled = is_array( $options ) && ! empty( $options['reminder_integration'] );
+		?>
+<input type="hidden" name="<?php echo esc_attr( self::OPTION_NAME ); ?>[reminder_integration]" value="0">
+<label>
+    <input type="checkbox" name="<?php echo esc_attr( self::OPTION_NAME ); ?>[reminder_integration]" value="1"
+        <?php checked( $enabled ); ?>>
+    <?php esc_html_e( 'Enable integration with Team Reminder for Clubs', 'salus-it500-heating-schema' ); ?>
+</label>
+<p class="description">
+    <?php esc_html_e( 'Highlight schedule periods in red when a timed reminder falls within them and the heating target is 14°C or lower. Past reminders and reminders without a time are ignored.', 'salus-it500-heating-schema' ); ?>
+</p>
+<?php
+	}
+
 	public static function render_settings_page() {
 		if ( ! current_user_can( 'manage_options' ) ) {
 			return;
@@ -325,7 +357,7 @@ final class Salus_iT500_Heating_Schema {
         <?php
 				settings_fields( 'salus_i500_settings' );
 				do_settings_sections( self::SETTINGS_PAGE_SLUG );
-				submit_button( __( 'Save credentials', 'salus-it500-heating-schema' ) );
+				submit_button( __( 'Save settings', 'salus-it500-heating-schema' ) );
 				?>
     </form>
     <hr>
@@ -341,12 +373,115 @@ final class Salus_iT500_Heating_Schema {
 <?php
 	}
 
+	private static function is_reminder_plugin_active() {
+		return class_exists( 'NEUTCOMP_TER_Reminder_Post_Type' )
+			&& post_type_exists( NEUTCOMP_TER_Reminder_Post_Type::POST_TYPE );
+	}
+
+	private static function get_enabled_reminders() {
+		if ( ! self::is_reminder_plugin_active() ) {
+			return array();
+		}
+
+		$options = get_option( self::OPTION_NAME, array() );
+		if ( ! is_array( $options ) || empty( $options['reminder_integration'] ) ) {
+			return array();
+		}
+
+		$today     = new DateTimeImmutable( 'today', wp_timezone() );
+		$reminders = array();
+		$reminder_ids = get_posts(
+			array(
+				'post_type'      => NEUTCOMP_TER_Reminder_Post_Type::POST_TYPE,
+				'post_status'    => 'any',
+				'posts_per_page' => -1,
+				'orderby'        => 'meta_value',
+				'order'          => 'ASC',
+				'meta_key'       => NEUTCOMP_TER_Reminder_Post_Type::DATE_META,
+				'fields'         => 'ids',
+			)
+		);
+		foreach ( $reminder_ids as $reminder_id ) {
+			$date_string = trim(
+				(string) get_post_meta( $reminder_id, NEUTCOMP_TER_Reminder_Post_Type::DATE_META, true )
+			);
+			$time_string = trim(
+				(string) get_post_meta( $reminder_id, NEUTCOMP_TER_Reminder_Post_Type::TIME_META, true )
+			);
+			if ( '' === $date_string || '' === $time_string ) {
+				continue;
+			}
+
+			$date = DateTimeImmutable::createFromFormat( '!Y-m-d', $date_string, wp_timezone() );
+			$time = DateTimeImmutable::createFromFormat( '!H:i', $time_string, wp_timezone() );
+			if ( ! $date || $date->format( 'Y-m-d' ) !== $date_string || $date < $today ) {
+				continue;
+			}
+			if ( ! $time || $time->format( 'H:i' ) !== $time_string ) {
+				continue;
+			}
+
+			$reminders[] = array(
+				'weekday' => (int) $date->format( 'N' ) - 1,
+				'time'    => $time->format( 'H:i' ),
+			);
+		}
+
+		return $reminders;
+	}
+
+	private static function get_reminder_highlights( $zone, $reminders ) {
+		$slots_by_day = array();
+		foreach ( $zone['days'] as $day ) {
+			$day_index = (int) substr( $day['attribute'], -2 );
+			$slots     = self::decode_heating_program( $day['value'] );
+			if ( $day_index < 0 || $day_index > 6 || is_wp_error( $slots ) ) {
+				continue;
+			}
+			$slots_by_day[ $day_index ] = $slots;
+		}
+
+		$highlights = array();
+		foreach ( $reminders as $reminder ) {
+			$weekday       = $reminder['weekday'];
+			$reminder_time = $reminder['time'];
+			for ( $offset = 0; $offset < 7; $offset++ ) {
+				$day_index = ( $weekday - $offset + 7 ) % 7;
+				if ( empty( $slots_by_day[ $day_index ] ) ) {
+					continue;
+				}
+
+				$slot_index = null;
+				if ( 0 === $offset ) {
+					foreach ( $slots_by_day[ $day_index ] as $index => $slot ) {
+						if ( $slot['time'] <= $reminder_time ) {
+							$slot_index = $index;
+						}
+					}
+					if ( null === $slot_index ) {
+						continue;
+					}
+				} else {
+					$slot_index = count( $slots_by_day[ $day_index ] ) - 1;
+				}
+
+				if ( (float) $slots_by_day[ $day_index ][ $slot_index ]['temperature'] <= 14 ) {
+					$highlights[ $day_index ][ $slot_index ] = true;
+				}
+				break;
+			}
+		}
+
+		return $highlights;
+	}
+
 	public static function render_schema_page() {
 		if ( ! current_user_can( self::SCHEMA_CAPABILITY ) ) {
 			return;
 		}
 
-		$schema = get_transient( self::schema_cache_key() );
+		$schema    = get_transient( self::schema_cache_key() );
+		$reminders = self::get_enabled_reminders();
 		?>
 <div class="wrap">
     <h1><?php esc_html_e( 'Heating schema', 'salus-it500-heating-schema' ); ?></h1>
@@ -366,7 +501,7 @@ final class Salus_iT500_Heating_Schema {
     <?php
 			if ( is_array( $schema ) && ! empty( $schema['devices'] ) ) {
 				foreach ( $schema['devices'] as $device ) {
-					self::render_device_schema( $device );
+					self::render_device_schema( $device, $reminders );
 				}
 			} elseif ( is_array( $schema ) && isset( $schema['devices'] ) ) {
 				echo '<p>' . esc_html__( 'No devices were returned for this account.', 'salus-it500-heating-schema' ) . '</p>';
@@ -390,7 +525,7 @@ final class Salus_iT500_Heating_Schema {
 <?php
 	}
 
-	private static function render_device_schema( $device ) {
+	private static function render_device_schema( $device, $reminders ) {
 		?>
 <section class="salus-schema-device">
     <h2><?php echo esc_html( $device['name'] ); ?></h2>
@@ -416,7 +551,7 @@ final class Salus_iT500_Heating_Schema {
                 <?php submit_button( __( 'Save zone title', 'salus-it500-heating-schema' ), 'secondary', 'submit', false ); ?>
             </form>
         </details>
-        <?php self::render_zone_editor( $device, $zone ); ?>
+        <?php self::render_zone_editor( $device, $zone, $reminders ); ?>
     </section>
     <?php
 		}
@@ -425,7 +560,8 @@ final class Salus_iT500_Heating_Schema {
 <?php
 	}
 
-	private static function render_zone_editor( $device, $zone ) {
+	private static function render_zone_editor( $device, $zone, $reminders ) {
+		$reminder_highlights = self::get_reminder_highlights( $zone, $reminders );
 		$has_invalid_program = false;
 		foreach ( $zone['days'] as $day ) {
 			if ( ! self::is_editable_heating_program( $day['value'] ) ) {
@@ -451,11 +587,16 @@ final class Salus_iT500_Heating_Schema {
         <div class="salus-schema-days">
             <?php foreach ( $zone['days'] as $day ) : ?>
             <?php $slots = self::decode_heating_program( $day['value'] ); ?>
+            <?php $day_index = (int) substr( $day['attribute'], -2 ); ?>
             <article class="salus-schema-day">
                 <h4><?php echo esc_html( $day['name'] ); ?></h4>
                 <?php for ( $slot_index = 0; $slot_index < 6; $slot_index++ ) : ?>
                 <?php $slot = isset( $slots[ $slot_index ] ) ? $slots[ $slot_index ] : array( 'time' => '', 'temperature' => '' ); ?>
-                <div class="salus-schema-edit-row">
+                <?php $has_reminder = isset( $reminder_highlights[ $day_index ][ $slot_index ] ); ?>
+                <div class="salus-schema-edit-row<?php echo $has_reminder ? ' salus-schema-reminder-warning' : ''; ?>"
+                    <?php if ( $has_reminder ) : ?>
+                    title="<?php esc_attr_e( 'A reminder is set, but the heating is not set higher than 14°C.', 'salus-it500-heating-schema' ); ?>"
+                    <?php endif; ?>>
                     <span><?php echo esc_html( sprintf( /* translators: %d is the schedule point number. */ __( 'Point %d', 'salus-it500-heating-schema' ), $slot_index + 1 ) ); ?></span>
                     <label>
                         <span
