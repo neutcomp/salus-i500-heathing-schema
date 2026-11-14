@@ -9,7 +9,6 @@
  * License: GPLv2 or later
  * License URI: https://www.gnu.org/licenses/gpl-2.0.html
  * Text Domain: salus-it500-heating-schema
- * Domain Path: /languages
  */
 
 if ( ! defined( 'ABSPATH' ) ) {
@@ -297,19 +296,20 @@ final class Salus_iT500_Heating_Schema {
 	public static function render_password_field() {
 		$credentials = self::get_credentials();
 		?>
-		<input type="password" class="regular-text" autocomplete="new-password" name="<?php echo esc_attr( self::OPTION_NAME ); ?>[password]" value="">
-		<p class="description">
-			<?php
+<input type="password" class="regular-text" autocomplete="new-password"
+    name="<?php echo esc_attr( self::OPTION_NAME ); ?>[password]" value="">
+<p class="description">
+    <?php
 			echo ! empty( $credentials['password'] )
 				? esc_html__( 'A password is saved. Leave this blank to keep it, or select the checkbox below to clear it.', 'salus-it500-heating-schema' )
 				: esc_html__( 'No password is saved.', 'salus-it500-heating-schema' );
 			?>
-		</p>
-		<label>
-			<input type="checkbox" name="<?php echo esc_attr( self::OPTION_NAME ); ?>[clear_password]" value="1">
-			<?php esc_html_e( 'Clear the saved password', 'salus-it500-heating-schema' ); ?>
-		</label>
-		<?php
+</p>
+<label>
+    <input type="checkbox" name="<?php echo esc_attr( self::OPTION_NAME ); ?>[clear_password]" value="1">
+    <?php esc_html_e( 'Clear the saved password', 'salus-it500-heating-schema' ); ?>
+</label>
+<?php
 	}
 
 	public static function render_settings_page() {
@@ -318,26 +318,27 @@ final class Salus_iT500_Heating_Schema {
 		}
 
 		?>
-		<div class="wrap">
-			<h1><?php esc_html_e( 'Salus iT500', 'salus-it500-heating-schema' ); ?></h1>
-			<?php self::render_connection_notice(); ?>
-			<form action="options.php" method="post">
-				<?php
+<div class="wrap">
+    <h1><?php esc_html_e( 'Salus iT500', 'salus-it500-heating-schema' ); ?></h1>
+    <?php self::render_connection_notice(); ?>
+    <form action="options.php" method="post">
+        <?php
 				settings_fields( 'salus_i500_settings' );
 				do_settings_sections( self::SETTINGS_PAGE_SLUG );
 				submit_button( __( 'Save credentials', 'salus-it500-heating-schema' ) );
 				?>
-			</form>
-			<hr>
-			<h2><?php esc_html_e( 'Connection test', 'salus-it500-heating-schema' ); ?></h2>
-			<p><?php esc_html_e( 'Save your credentials before testing. This checks authentication only and does not change any heating settings.', 'salus-it500-heating-schema' ); ?></p>
-			<form action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>" method="post">
-				<input type="hidden" name="action" value="<?php echo esc_attr( self::TEST_ACTION ); ?>">
-				<?php wp_nonce_field( self::TEST_ACTION ); ?>
-				<?php submit_button( __( 'Test connection', 'salus-it500-heating-schema' ), 'secondary', 'submit', false ); ?>
-			</form>
-		</div>
-		<?php
+    </form>
+    <hr>
+    <h2><?php esc_html_e( 'Connection test', 'salus-it500-heating-schema' ); ?></h2>
+    <p><?php esc_html_e( 'Save your credentials before testing. This checks authentication only and does not change any heating settings.', 'salus-it500-heating-schema' ); ?>
+    </p>
+    <form action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>" method="post">
+        <input type="hidden" name="action" value="<?php echo esc_attr( self::TEST_ACTION ); ?>">
+        <?php wp_nonce_field( self::TEST_ACTION ); ?>
+        <?php submit_button( __( 'Test connection', 'salus-it500-heating-schema' ), 'secondary', 'submit', false ); ?>
+    </form>
+</div>
+<?php
 	}
 
 	public static function render_schema_page() {
@@ -347,17 +348,22 @@ final class Salus_iT500_Heating_Schema {
 
 		$schema = get_transient( self::schema_cache_key() );
 		?>
-		<div class="wrap">
-			<h1><?php esc_html_e( 'Heating schema', 'salus-it500-heating-schema' ); ?></h1>
-			<p class="salus-schema-intro"><?php esc_html_e( 'Edit times and target temperatures directly for each heating zone. Leave both fields empty to remove a point. Temperatures use the unit configured on your thermostat; save each zone separately.', 'salus-it500-heating-schema' ); ?></p>
-			<div class="notice notice-warning salus-schema-presence" data-salus-presence role="status" aria-live="polite" hidden><p></p></div>
-			<?php self::render_connection_notice(); ?>
-			<form action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>" method="post">
-				<input type="hidden" name="action" value="<?php echo esc_attr( self::SCHEMA_ACTION ); ?>">
-				<?php wp_nonce_field( self::SCHEMA_ACTION ); ?>
-				<?php submit_button( __( 'Refresh schema', 'salus-it500-heating-schema' ), 'secondary', 'submit', false ); ?>
-			</form>
-			<?php
+<div class="wrap">
+    <h1><?php esc_html_e( 'Heating schema', 'salus-it500-heating-schema' ); ?></h1>
+    <p class="salus-schema-intro">
+        <?php esc_html_e( 'Edit times and target temperatures directly for each heating zone. Leave both fields empty to remove a point. Temperatures use the unit configured on your thermostat; save each zone separately.', 'salus-it500-heating-schema' ); ?>
+    </p>
+    <div class="notice notice-warning salus-schema-presence" data-salus-presence role="status" aria-live="polite"
+        hidden>
+        <p></p>
+    </div>
+    <?php self::render_connection_notice(); ?>
+    <form action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>" method="post">
+        <input type="hidden" name="action" value="<?php echo esc_attr( self::SCHEMA_ACTION ); ?>">
+        <?php wp_nonce_field( self::SCHEMA_ACTION ); ?>
+        <?php submit_button( __( 'Refresh schema', 'salus-it500-heating-schema' ), 'secondary', 'submit', false ); ?>
+    </form>
+    <?php
 			if ( is_array( $schema ) && ! empty( $schema['devices'] ) ) {
 				foreach ( $schema['devices'] as $device ) {
 					self::render_device_schema( $device );
@@ -366,54 +372,57 @@ final class Salus_iT500_Heating_Schema {
 				echo '<p>' . esc_html__( 'No devices were returned for this account.', 'salus-it500-heating-schema' ) . '</p>';
 			} else {
 				?>
-				<div data-salus-auto-load>
-					<p class="salus-schema-loading" role="status" aria-live="polite">
-						<span class="spinner is-active" aria-hidden="true"></span>
-						<?php esc_html_e( 'Loading heating schema from Salus…', 'salus-it500-heating-schema' ); ?>
-					</p>
-					<p class="salus-schema-warning" role="alert" hidden></p>
-					<noscript>
-						<p><?php esc_html_e( 'Automatic loading requires JavaScript. Select “Refresh schema” to read it from Salus.', 'salus-it500-heating-schema' ); ?></p>
-					</noscript>
-				</div>
-				<?php
+    <div data-salus-auto-load>
+        <p class="salus-schema-loading" role="status" aria-live="polite">
+            <span class="spinner is-active" aria-hidden="true"></span>
+            <?php esc_html_e( 'Loading heating schema from Salus…', 'salus-it500-heating-schema' ); ?>
+        </p>
+        <p class="salus-schema-warning" role="alert" hidden></p>
+        <noscript>
+            <p><?php esc_html_e( 'Automatic loading requires JavaScript. Select “Refresh schema” to read it from Salus.', 'salus-it500-heating-schema' ); ?>
+            </p>
+        </noscript>
+    </div>
+    <?php
 			}
 			?>
-		</div>
-		<?php
+</div>
+<?php
 	}
 
 	private static function render_device_schema( $device ) {
 		?>
-		<section class="salus-schema-device">
-			<h2><?php echo esc_html( $device['name'] ); ?></h2>
-		<?php
+<section class="salus-schema-device">
+    <h2><?php echo esc_html( $device['name'] ); ?></h2>
+    <?php
 		foreach ( $device['zones'] as $zone ) {
 			$zone_name = self::get_zone_name( $device['id'], $zone['prefix'], $zone['name'] );
 			?>
-			<section class="salus-schema-zone">
-				<h3><?php echo esc_html( $zone_name ); ?></h3>
-				<details class="salus-schema-rename">
-					<summary><?php esc_html_e( 'Rename this zone', 'salus-it500-heating-schema' ); ?></summary>
-					<form action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>" method="post">
-						<input type="hidden" name="action" value="<?php echo esc_attr( self::RENAME_ZONE_ACTION ); ?>">
-						<input type="hidden" name="device_id" value="<?php echo esc_attr( $device['id'] ); ?>">
-						<input type="hidden" name="zone_prefix" value="<?php echo esc_attr( $zone['prefix'] ); ?>">
-						<?php wp_nonce_field( self::RENAME_ZONE_ACTION ); ?>
-						<label>
-							<span class="screen-reader-text"><?php esc_html_e( 'Zone title', 'salus-it500-heating-schema' ); ?></span>
-							<input type="text" name="zone_name" value="<?php echo esc_attr( $zone_name ); ?>" maxlength="80" required>
-						</label>
-						<?php submit_button( __( 'Save zone title', 'salus-it500-heating-schema' ), 'secondary', 'submit', false ); ?>
-					</form>
-				</details>
-				<?php self::render_zone_editor( $device, $zone ); ?>
-			</section>
-			<?php
+    <section class="salus-schema-zone">
+        <h3><?php echo esc_html( $zone_name ); ?></h3>
+        <details class="salus-schema-rename">
+            <summary><?php esc_html_e( 'Rename this zone', 'salus-it500-heating-schema' ); ?></summary>
+            <form action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>" method="post">
+                <input type="hidden" name="action" value="<?php echo esc_attr( self::RENAME_ZONE_ACTION ); ?>">
+                <input type="hidden" name="device_id" value="<?php echo esc_attr( $device['id'] ); ?>">
+                <input type="hidden" name="zone_prefix" value="<?php echo esc_attr( $zone['prefix'] ); ?>">
+                <?php wp_nonce_field( self::RENAME_ZONE_ACTION ); ?>
+                <label>
+                    <span
+                        class="screen-reader-text"><?php esc_html_e( 'Zone title', 'salus-it500-heating-schema' ); ?></span>
+                    <input type="text" name="zone_name" value="<?php echo esc_attr( $zone_name ); ?>" maxlength="80"
+                        required>
+                </label>
+                <?php submit_button( __( 'Save zone title', 'salus-it500-heating-schema' ), 'secondary', 'submit', false ); ?>
+            </form>
+        </details>
+        <?php self::render_zone_editor( $device, $zone ); ?>
+    </section>
+    <?php
 		}
 		?>
-		</section>
-		<?php
+</section>
+<?php
 	}
 
 	private static function render_zone_editor( $device, $zone ) {
@@ -425,45 +434,55 @@ final class Salus_iT500_Heating_Schema {
 			}
 		}
 		?>
-		<details class="salus-schema-editor" open>
-			<summary><?php esc_html_e( 'Edit this heating zone', 'salus-it500-heating-schema' ); ?></summary>
-			<p><?php esc_html_e( 'Change up to six time and temperature points per day. Leave both fields empty to remove a point. Saving submits the full weekly schedule for this zone.', 'salus-it500-heating-schema' ); ?></p>
-			<?php if ( $has_invalid_program ) : ?>
-				<p class="salus-schema-warning"><?php esc_html_e( 'This zone contains an unsupported programme value and cannot be edited safely. Refresh the schema before trying again.', 'salus-it500-heating-schema' ); ?></p>
-			<?php else : ?>
-				<form action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>" method="post" data-salus-progress>
-					<input type="hidden" name="action" value="<?php echo esc_attr( self::UPDATE_ACTION ); ?>">
-					<input type="hidden" name="device_id" value="<?php echo esc_attr( $device['id'] ); ?>">
-					<input type="hidden" name="zone_prefix" value="<?php echo esc_attr( $zone['prefix'] ); ?>">
-					<?php wp_nonce_field( self::UPDATE_ACTION ); ?>
-					<div class="salus-schema-days">
-						<?php foreach ( $zone['days'] as $day ) : ?>
-							<?php $slots = self::decode_heating_program( $day['value'] ); ?>
-							<article class="salus-schema-day">
-								<h4><?php echo esc_html( $day['name'] ); ?></h4>
-								<?php for ( $slot_index = 0; $slot_index < 6; $slot_index++ ) : ?>
-									<?php $slot = isset( $slots[ $slot_index ] ) ? $slots[ $slot_index ] : array( 'time' => '', 'temperature' => '' ); ?>
-									<div class="salus-schema-edit-row">
-										<span><?php echo esc_html( sprintf( /* translators: %d is the schedule point number. */ __( 'Point %d', 'salus-it500-heating-schema' ), $slot_index + 1 ) ); ?></span>
-										<label>
-											<span class="screen-reader-text"><?php esc_html_e( 'Time', 'salus-it500-heating-schema' ); ?></span>
-											<input type="time" name="programs[<?php echo esc_attr( $day['attribute'] ); ?>][<?php echo esc_attr( $slot_index ); ?>][time]" value="<?php echo esc_attr( $slot['time'] ); ?>">
-										</label>
-										<label>
-											<span class="screen-reader-text"><?php esc_html_e( 'Temperature', 'salus-it500-heating-schema' ); ?></span>
-											<input type="number" min="0" max="50" step="0.1" name="programs[<?php echo esc_attr( $day['attribute'] ); ?>][<?php echo esc_attr( $slot_index ); ?>][temperature]" value="<?php echo esc_attr( $slot['temperature'] ); ?>" placeholder="<?php esc_attr_e( 'Temperature', 'salus-it500-heating-schema' ); ?>">
-											<span aria-hidden="true">&deg;</span>
-										</label>
-									</div>
-								<?php endfor; ?>
-							</article>
-						<?php endforeach; ?>
-					</div>
-					<?php submit_button( __( 'Save zone schedule', 'salus-it500-heating-schema' ) ); ?>
-				</form>
-			<?php endif; ?>
-		</details>
-		<?php
+<details class="salus-schema-editor" open>
+    <summary><?php esc_html_e( 'Edit this heating zone', 'salus-it500-heating-schema' ); ?></summary>
+    <p><?php esc_html_e( 'Change up to six time and temperature points per day. Leave both fields empty to remove a point. Saving submits the full weekly schedule for this zone.', 'salus-it500-heating-schema' ); ?>
+    </p>
+    <?php if ( $has_invalid_program ) : ?>
+    <p class="salus-schema-warning">
+        <?php esc_html_e( 'This zone contains an unsupported programme value and cannot be edited safely. Refresh the schema before trying again.', 'salus-it500-heating-schema' ); ?>
+    </p>
+    <?php else : ?>
+    <form action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>" method="post" data-salus-progress>
+        <input type="hidden" name="action" value="<?php echo esc_attr( self::UPDATE_ACTION ); ?>">
+        <input type="hidden" name="device_id" value="<?php echo esc_attr( $device['id'] ); ?>">
+        <input type="hidden" name="zone_prefix" value="<?php echo esc_attr( $zone['prefix'] ); ?>">
+        <?php wp_nonce_field( self::UPDATE_ACTION ); ?>
+        <div class="salus-schema-days">
+            <?php foreach ( $zone['days'] as $day ) : ?>
+            <?php $slots = self::decode_heating_program( $day['value'] ); ?>
+            <article class="salus-schema-day">
+                <h4><?php echo esc_html( $day['name'] ); ?></h4>
+                <?php for ( $slot_index = 0; $slot_index < 6; $slot_index++ ) : ?>
+                <?php $slot = isset( $slots[ $slot_index ] ) ? $slots[ $slot_index ] : array( 'time' => '', 'temperature' => '' ); ?>
+                <div class="salus-schema-edit-row">
+                    <span><?php echo esc_html( sprintf( /* translators: %d is the schedule point number. */ __( 'Point %d', 'salus-it500-heating-schema' ), $slot_index + 1 ) ); ?></span>
+                    <label>
+                        <span
+                            class="screen-reader-text"><?php esc_html_e( 'Time', 'salus-it500-heating-schema' ); ?></span>
+                        <input type="time"
+                            name="programs[<?php echo esc_attr( $day['attribute'] ); ?>][<?php echo esc_attr( $slot_index ); ?>][time]"
+                            value="<?php echo esc_attr( $slot['time'] ); ?>">
+                    </label>
+                    <label>
+                        <span
+                            class="screen-reader-text"><?php esc_html_e( 'Temperature', 'salus-it500-heating-schema' ); ?></span>
+                        <input type="number" min="0" max="50" step="0.1"
+                            name="programs[<?php echo esc_attr( $day['attribute'] ); ?>][<?php echo esc_attr( $slot_index ); ?>][temperature]"
+                            value="<?php echo esc_attr( $slot['temperature'] ); ?>"
+                            placeholder="<?php esc_attr_e( 'Temperature', 'salus-it500-heating-schema' ); ?>">
+                        <span aria-hidden="true">&deg;</span>
+                    </label>
+                </div>
+                <?php endfor; ?>
+            </article>
+            <?php endforeach; ?>
+        </div>
+        <?php submit_button( __( 'Save zone schedule', 'salus-it500-heating-schema' ) ); ?>
+    </form>
+    <?php endif; ?>
+</details>
+<?php
 	}
 
 	public static function rename_zone() {

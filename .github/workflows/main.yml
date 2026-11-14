@@ -31,6 +31,7 @@ jobs:
           **/node_modules/**
           **/scss
           **/scss/**
+          salus-it500-connection-research.md
           package.json
           package-lock.json
           .gitignore
